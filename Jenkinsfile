@@ -1,8 +1,8 @@
 pipeline{
     agent any
     environment{
-        DOCKER_IMAGE_FRONT = 'marwanmw/Dokkan-frontend'
-        DOCKER_IMAGE_BACK = 'marwanmw/Dokkan-backend'
+        DOCKER_IMAGE_FRONT = 'marwanmw/dokkan-frontend'
+        DOCKER_IMAGE_BACK = 'marwanmw/dokkan-backend'
         EB_APP_NAME = "Dokkan"
         EB_ENV_NAME = "Dokkan-env"
         AWS_REGION = "us-east-1"
