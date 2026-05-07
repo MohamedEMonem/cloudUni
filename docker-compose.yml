@@ -66,9 +66,7 @@ services:
     restart: always
 
   backend:
-    build:
-      context: .
-      dockerfile: ./Backend/Dockerfile
+    image: marwanmw/Dokkan-backend:__BUILD_NUMBER__
     depends_on:
       postgres:
         condition: service_healthy
@@ -99,9 +97,7 @@ services:
       - "${PORT:-3000}:3000"
     restart: unless-stopped
   frontend:
-    build:
-      context: .
-      dockerfile: ./Frontend/Dockerfile
+    image: marwanmw/Dokkan-frontend:__BUILD_NUMBER__
     depends_on:
       backend:
         condition: service_healthy
