@@ -4,8 +4,6 @@ FROM node:20-alpine
 ENV NODE_ENV=production
 
 WORKDIR /app
-RUN apk add --no-cache bash netcat-openbsd dos2unix
-
 # Copy package files and install dependencies
 COPY ./package*.json ./
 # npm ci is great, but we only need production dependencies for the final image
@@ -24,10 +22,6 @@ RUN chown -R node:node /app
 
 # Switch to the restricted 'node' user for security
 USER node
-
-RUN dos2unix ./docker/prostartup.sh && chmod +x ./docker/prostartup.sh
-
-RUN ./docker/prostartup.sh
 
 EXPOSE 3000
 
