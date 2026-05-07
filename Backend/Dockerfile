@@ -1,5 +1,4 @@
-FROM node:20-alpine
-
+FROM node:22-slim
 # Set to production to optimize NPM and Node behavior
 ENV NODE_ENV=production
 
