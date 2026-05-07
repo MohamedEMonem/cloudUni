@@ -1,19 +1,31 @@
 FROM node:20-alpine
 
+# Set to production to optimize NPM and Node behavior
+ENV NODE_ENV=production
+
 WORKDIR /app
 
-RUN apk add --no-cache bash netcat-openbsd dos2unix
-
+# Copy package files and install dependencies
 COPY package*.json ./
-RUN npm ci
+# npm ci is great, but we only need production dependencies for the final image
+RUN npm ci --omit=dev
 
+# Copy Prisma schema and generate the client
 COPY prisma ./prisma
-COPY prisma.config.js ./
+# Generate the Prisma client (this needs to happen at build time)
 RUN npx prisma generate
 
+# Copy the rest of your application code
 COPY . .
-RUN dos2unix docker/startup.sh && chmod +x docker/startup.sh
+
+# Change ownership of the /app folder to the restricted 'node' user
+RUN chown -R node:node /app
+
+# Switch to the restricted 'node' user for security
+USER node
 
 EXPOSE 3000
 
-CMD ["bash", "docker/startup.sh"]
+# Use a startup script to handle migrations, OR just start the app if 
+# migrations are handled externally.
+CMD ["npm", "start"]

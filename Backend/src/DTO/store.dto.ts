@@ -19,4 +19,8 @@ export const createStoreSchema = z.object({
   }),
 });
 
+export const updatestoreSchema = z.object({
+  data: createStoreSchema.shape.data.partial(),
+});
+export type updateStoreDto = z.infer<typeof updatestoreSchema>["data"];
 export type CreateStoreDto = z.infer<typeof createStoreSchema>["data"];

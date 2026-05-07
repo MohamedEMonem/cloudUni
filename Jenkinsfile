@@ -1,0 +1,86 @@
+pipeline{
+    agent any
+    environment{
+        DOCKER_IMAGE_FRONT = 'marwanmw/Dokkan-frontend'
+        DOCKER_IMAGE_BACK = 'marwanmw/Dokkan-backend'
+        EB_APP_NAME = "Dokkan"
+        EB_ENV_NAME = "Dokkan-env"
+        AWS_REGION = "us-east-1"
+        S3_BUCKET = "dokkan-s3"
+
+    }
+    stages{
+
+        // stage('Test'){
+        //     steps{
+        //         sh 'docker build -f backend/Dockerfile.test -t backend-test-image ./backend/'
+        //         sh 'docker run --rm backend-test-image'
+        // }
+    }
+        stage('build'){
+            steps{
+                sh 'docker build -t ${DOCKER_IMAGE_BACK}:${BUILD_NUMBER} -t ${DOCKER_IMAGE_BACK}:latest ./backend/'
+                sh 'docker build -t ${DOCKER_IMAGE_FRONT}:${BUILD_NUMBER} -t ${DOCKER_IMAGE_FRONT}:latest ./frontend/'
+            }
+        }
+
+        stage('push to docker hub'){
+            steps{
+            withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+            
+            // Log in using the variables
+            sh 'echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin'
+            
+            // Push the images
+            sh 'docker push ${DOCKER_IMAGE_FRONT}:${BUILD_NUMBER}'
+            sh 'docker push ${DOCKER_IMAGE_BACK}:${BUILD_NUMBER}'
+            sh 'docker push ${DOCKER_IMAGE_FRONT}:latest'
+            sh 'docker push ${DOCKER_IMAGE_BACK}:latest'
+        }
+            }
+        }
+        stage('package deployment instructions'){
+            steps{
+                sh 'rm -f deploy.zip'
+                sh "sed -i 's/__BUILD_NUMBER__/${BUILD_NUMBER}/g' docker-compose.yml"
+                sh 'zip deploy.zip docker-compose.yml'
+            }
+        }
+        // stage('Upload to S3 (The Artifactory)') {
+        //     steps {
+        //     }
+        // }
+        stage('Deploy to Elastic Beanstalk') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'), 
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+
+                    sh "aws s3 cp deploy.zip s3://${S3_BUCKET}/deploy-build-${BUILD_NUMBER}.zip"
+                    sh """-
+                        aws elasticbeanstalk create-application-version \
+                        --region ${AWS_REGION} \
+                        --application-name ${EB_APP_NAME} \
+                        --version-label dokkan-${BUILD_NUMBER} \
+                        --source-bundle S3Bucket="${S3_BUCKET}",S3Key="deploy-build-${BUILD_NUMBER}.zip"
+                    """
+                
+                
+                    sh """
+                        aws elasticbeanstalk update-environment \
+                        --region ${AWS_REGION} \
+                        --application-name ${EB_APP_NAME} \
+                        --environment-name ${EB_ENV_NAME} \
+                        --version-label dokkan-${BUILD_NUMBER}
+                    """
+                }
+            }
+        }
+        
+
+
+
+
+
+    }
