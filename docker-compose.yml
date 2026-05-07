@@ -53,20 +53,9 @@ services:
       - frontend_minio_data:/data
     restart: unless-stopped
 
-  mailpit:
-    image: axllent/mailpit:latest
-    container_name: nx_mailpit
-    ports:
-      - "8025:8025"
-      - "1025:1025"
-    environment:
-      - MP_MAX_MESSAGES=500
-    networks:
-      - nx_network
-    restart: always
 
   backend:
-    image: marwanmw/Dokkan-backend:__BUILD_NUMBER__
+    image: marwanmw/dokkan-backend:__BUILD_NUMBER__
     depends_on:
       postgres:
         condition: service_healthy
@@ -97,7 +86,7 @@ services:
       - "${PORT:-3000}:3000"
     restart: unless-stopped
   frontend:
-    image: marwanmw/Dokkan-frontend:__BUILD_NUMBER__
+    image: marwanmw/dokkan-frontend:__BUILD_NUMBER__
     depends_on:
       backend:
         condition: service_healthy
