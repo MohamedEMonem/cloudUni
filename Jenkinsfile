@@ -59,7 +59,7 @@ pipeline{
                 ]) {
 
                     sh "aws s3 cp deploy.zip s3://${S3_BUCKET}/deploy-build-${BUILD_NUMBER}.zip"
-                    sh """-
+                    sh """
                         aws elasticbeanstalk create-application-version \
                         --region ${AWS_REGION} \
                         --application-name ${EB_APP_NAME} \
