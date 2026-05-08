@@ -7,7 +7,7 @@ import { error } from "console";
 
 const storeService = new StoreServices()
 
-export const createStore = async (req: any, res: Response)=>{
+export const createStore = async (req: Request, res: Response, next: NextFunction)=>{
 try{
     const dto: CreateStoreDto = req.body.data;
     const currentUserId = (req as Request & { user?: { id: string } }).user?.id;

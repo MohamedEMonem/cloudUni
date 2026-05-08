@@ -16,7 +16,7 @@ pipeline{
         //         sh 'docker build -f backend/Dockerfile.test -t backend-test-image ./backend/'
         //         sh 'docker run --rm backend-test-image'
         // }
-    
+
         stage('build'){
             steps{
                 sh 'docker build -t ${DOCKER_IMAGE_BACK}:${BUILD_NUMBER} -t ${DOCKER_IMAGE_BACK}:latest ./Backend/'
@@ -39,6 +39,7 @@ pipeline{
         }
             }
         }
+       
         stage('package deployment instructions'){
             steps{
                 sh 'rm -f deploy.zip'
