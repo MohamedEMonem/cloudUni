@@ -19,8 +19,8 @@ pipeline{
 
         stage('build'){
             steps{
-                sh 'docker build -t ${DOCKER_IMAGE_BACK}:${BUILD_NUMBER} -t ${DOCKER_IMAGE_BACK}:latest ./Backend/'
-                sh 'docker build -t ${DOCKER_IMAGE_FRONT}:${BUILD_NUMBER} -t ${DOCKER_IMAGE_FRONT}:latest ./Frontend/'
+                sh 'docker build -f ./Backend/Dockerfile -t ${DOCKER_IMAGE_BACK}:${BUILD_NUMBER} -t ${DOCKER_IMAGE_BACK}:latest ./'
+                sh 'docker build -f ./Frontend/Dockerfile -t ${DOCKER_IMAGE_FRONT}:${BUILD_NUMBER} -t ${DOCKER_IMAGE_FRONT}:latest ./'
             }
         }
 
