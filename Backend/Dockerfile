@@ -19,7 +19,6 @@ RUN npx prisma generate
 # Build the app
 COPY tsconfig.json ./
 COPY swagger-output.json ./
-COPY .env ./
 COPY src ./src
 RUN npm run build
 
@@ -40,8 +39,6 @@ COPY --from=builder /app/dist ./dist
 # Runtime files loaded from disk
 COPY --from=builder /app/swagger-output.json ./swagger-output.json
 COPY --from=builder /app/src/templates ./src/templates
-COPY --from=builder /app/.env ./.env
-
 EXPOSE 3000
 
 CMD ["npm", "start"]

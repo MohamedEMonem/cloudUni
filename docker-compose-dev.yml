@@ -55,12 +55,20 @@ services:
 
 
   backend:
-    image: marwanmw/dokkan-backend
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile.dev
+    command: sh -c "npm install && npm run build && npm run dev"
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - ./Backend:/app
+      - /app/node_modules
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
+        condition: service_started
       meilisearch:
         condition: service_started
       minio:
@@ -82,8 +90,6 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-rootpassword}
       AUTO_SEED: ${AUTO_SEED:-true}
       DB_WAIT_RETRIES: ${DB_WAIT_RETRIES:-60}
-    ports:
-      - "${PORT:-3000}:3000"
     restart: unless-stopped
   frontend:
     image: marwanmw/dokkan-frontend
