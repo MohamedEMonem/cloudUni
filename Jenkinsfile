@@ -42,65 +42,18 @@ pipeline{
        
         stage('package deployment instructions'){
             steps{
-                withCredentials([
-                    string(credentialsId: 'database-url', variable: 'DATABASE_URL'),
-                    string(credentialsId: 'jwt-secret', variable: 'JWT_SECRET')
-                ]){
-                    sh '''
-                        echo "Creating Backend/.env from Jenkins credentials..."
-                        cat > Backend/.env << EOF
-# Server
-PORT=3000
-JWT_SECRET=${JWT_SECRET}
-REFRESH_TOKEN_SECRET=secure-refresh-token-change-in-production
-REFRESH_TOKEN_EXPIRES_IN=7d
-REFRESH_TOKEN_PREFIX=refresh
-REFRESH_COOKIE_NAME=refreshToken
-REFRESH_COOKIE_SAMESITE=lax
-REFRESH_COOKIE_SECURE=true
-REFRESH_COOKIE_PATH=/api/auth
-
-# Frontend CORS origin(s)
-CORS_ORIGIN=http://dokkan-env.eba-sdbipm8i.us-east-1.elasticbeanstalk.com:5000,http://dokkan-env.eba-sdbipm8i.us-east-1.elasticbeanstalk.com:3000
-
-# PostgreSQL
-DATABASE_URL=${DATABASE_URL}
-POSTGRES_PORT=5432
-
-# Redis
-REDIS_HOST=rediss://default:gQAAAAAAAdGnAAIgcDEyOTc4MTRjMmVkZTA0YWQwYWE2MjEyNjk2N2E5ODYyYQ@unbiased-skylark-119207.upstash.io
-REDIS_PORT=6379
-
-# Meilisearch
-MEILI_MASTER_KEY=masterKey
-MEILI_PORT=7700
-
-# MinIO
-MINIO_ENDPOINT=localhost
-MINIO_PORT=9000
-MINIO_USE_SSL=false
-MINIO_ROOT_USER=root
-MINIO_ROOT_PASSWORD=rootpassword
-MINIO_API_PORT=9000
-MINIO_CONSOLE_PORT=9001
-
-# One-shot docker startup behavior
-AUTO_SEED=true
-DB_WAIT_RETRIES=60
-
-# Email Configuration
-SMTP_HOST=localhost
-SMTP_PORT=1025
-SMTP_USER=
-SMTP_PASS=
-EMAIL_FROM="Dokkan Security <noreply@dokkan.com>"
-EOF
-                    '''
-                }
-                
                 sh 'rm -f deploy.zip'
                 sh "sed -i 's/__BUILD_NUMBER__/${BUILD_NUMBER}/g' docker-compose.yml"
-                sh 'zip deploy.zip docker-compose.yml Backend/.env'
+                sh '''
+                    echo "Packaging deployment files..."
+                    if [ -f Backend/.env ]; then
+                        echo "Backend/.env found, including in deployment package..."
+                        zip deploy.zip docker-compose.yml Backend/.env
+                    else
+                        echo "Backend/.env not found, packaging without it..."
+                        zip deploy.zip docker-compose.yml
+                    fi
+                '''
             }
         }
         // stage('Upload to S3 (The Artifactory)') {
