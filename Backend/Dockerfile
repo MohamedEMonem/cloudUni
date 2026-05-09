@@ -39,6 +39,15 @@ COPY --from=builder /app/dist ./dist
 # Runtime files loaded from disk
 COPY --from=builder /app/swagger-output.json ./swagger-output.json
 COPY --from=builder /app/src/templates ./src/templates
+
+# Copy the start script
+COPY start.sh ./
+
+# Make the script executable
+RUN chmod +x start.sh
+
+# Expose the port
 EXPOSE 3000
 
-CMD ["npm", "start"]
+# Run the script when the container starts
+CMD ["./start.sh"]

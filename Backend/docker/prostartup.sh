@@ -27,4 +27,4 @@ fi
 echo "Starting production server..."
 # 'exec' is critical here. It replaces the shell process with the Node process.
 # This ensures Node receives shutdown signals (SIGTERM) directly from Docker, allowing for graceful shutdowns.
-exec node dist/index.js
+exec node dist/server.js
