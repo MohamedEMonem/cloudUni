@@ -42,21 +42,75 @@ pipeline{
        
         stage('package deployment instructions'){
             steps{
+                withCredentials([
+                    string(credentialsId: 'database-url', variable: 'DATABASE_URL'),
+                    string(credentialsId: 'jwt-secret', variable: 'JWT_SECRET'),
+                    string(credentialsId: 'refresh-token-secret', variable: 'REFRESH_TOKEN_SECRET'),
+                    string(credentialsId: 'postgres-user', variable: 'POSTGRES_USER'),
+                    string(credentialsId: 'postgres-password', variable: 'POSTGRES_PASSWORD'),
+                    string(credentialsId: 'postgres-db', variable: 'POSTGRES_DB'),
+                    string(credentialsId: 'redis-host', variable: 'REDIS_HOST'),
+                    string(credentialsId: 'cors-origin', variable: 'CORS_ORIGIN')
+                ]){
+                    sh '''
+                        # Create .env file from Jenkins Secrets
+                        echo "Creating Backend/.env from Jenkins credentials..."
+                        cat > Backend/.env << EOF
+# Server
+PORT=3000
+JWT_SECRET=${JWT_SECRET}
+REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+REFRESH_TOKEN_EXPIRES_IN=7d
+REFRESH_TOKEN_PREFIX=refresh
+REFRESH_COOKIE_NAME=refreshToken
+REFRESH_COOKIE_SAMESITE=lax
+REFRESH_COOKIE_SECURE=false
+REFRESH_COOKIE_PATH=/api/auth
+
+# Frontend CORS origin(s)
+CORS_ORIGIN=${CORS_ORIGIN}
+
+# PostgreSQL
+POSTGRES_USER=${POSTGRES_USER}
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+POSTGRES_DB=${POSTGRES_DB}
+POSTGRES_PORT=5432
+DATABASE_URL=${DATABASE_URL}
+
+# Redis
+REDIS_HOST=${REDIS_HOST}
+REDIS_PORT=6379
+
+# Meilisearch
+MEILI_MASTER_KEY=masterKey
+MEILI_PORT=7700
+
+# MinIO
+MINIO_ENDPOINT=localhost
+MINIO_PORT=9000
+MINIO_USE_SSL=false
+MINIO_ROOT_USER=root
+MINIO_ROOT_PASSWORD=rootpassword
+MINIO_API_PORT=9000
+MINIO_CONSOLE_PORT=9001
+
+# One-shot docker startup behavior
+AUTO_SEED=true
+DB_WAIT_RETRIES=60
+
+# Email Configuration
+SMTP_HOST=localhost
+SMTP_PORT=1025
+SMTP_USER=
+SMTP_PASS=
+EMAIL_FROM="Dokkan Security <noreply@dokkan.com>"
+EOF
+                    '''
+                }
+                
                 sh 'rm -f deploy.zip'
                 sh "sed -i 's/__BUILD_NUMBER__/${BUILD_NUMBER}/g' docker-compose.yml"
                 sh 'zip deploy.zip docker-compose.yml Backend/.env'
-                sh '''
-                    # Parse .env file and create EB option-settings JSON
-                    echo "Parsing environment variables from Backend/.env..."
-                    cat Backend/.env | grep -v '^#' | grep -v '^$' > /tmp/env_vars.txt
-                    echo "OPTIONS_JSON=" > /tmp/eb_options.sh
-                    while IFS='=' read -r key value; do
-                        if [ ! -z "$key" ]; then
-                            echo "{Namespace=aws:elasticbeanstalk:application:environment,OptionName=$key,Value=$value}"
-                        fi
-                    done < /tmp/env_vars.txt > /tmp/eb_options.txt
-                    cat /tmp/eb_options.txt
-                '''
             }
         }
         // stage('Upload to S3 (The Artifactory)') {
