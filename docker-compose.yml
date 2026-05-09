@@ -15,7 +15,7 @@ services:
       - REFRESH_COOKIE_SECURE=${REFRESH_COOKIE_SECURE}
       - REFRESH_COOKIE_PATH=${REFRESH_COOKIE_PATH}
       - CORS_ORIGIN=${CORS_ORIGIN}
-      - DATABASE_URL=${DATABASE_URL}  
+      - DATABASE_URL=postgresql://root:dokkanroot@dokkandb.c854csucuyms.us-east-1.rds.amazonaws.com:5432/postgres 
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
