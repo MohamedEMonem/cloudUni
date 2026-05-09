@@ -6,7 +6,7 @@ pipeline{
         EB_APP_NAME = "Dokkan"
         EB_ENV_NAME = "Dokkan-env"
         AWS_REGION = "us-east-1"
-        S3_BUCKET = "dokkan-s3-europe1"
+        S3_BUCKET = "prod-dokkan"
 
     }
     stages{
@@ -152,6 +152,23 @@ EOF
                         --application-name ${EB_APP_NAME} \
                         --environment-name ${EB_ENV_NAME} \
                         --version-label dokkan-${BUILD_NUMBER}
+                    """
+                    
+                    echo "Waiting for Elastic Beanstalk environment to update..."
+                    sh """
+                        aws elasticbeanstalk wait environment-updated \
+                        --region ${AWS_REGION} \
+                        --environment-name ${EB_ENV_NAME} \
+                        --application-name ${EB_APP_NAME} || echo "Note: Environment update may still be in progress"
+                    """
+                    
+                    echo "Deployment verification..."
+                    sh """
+                        aws elasticbeanstalk describe-environments \
+                        --region ${AWS_REGION} \
+                        --environment-names ${EB_ENV_NAME} \
+                        --query 'Environments[0].[EnvironmentName,Status,Health,HealthStatus]' \
+                        --output table
                     """
                 }
             }
