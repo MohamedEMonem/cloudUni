@@ -59,7 +59,7 @@ services:
 
 
   backend:
-    image: marwanmw/dokkan-backend:__BUILD_NUMBER__
+    image: mohamedemonem/dokkan-backend:__BUILD_NUMBER__
     env_file:
       - ./Backend/.env
     depends_on:
@@ -73,7 +73,7 @@ services:
       - "${PORT:-3000}:3000"
     restart: unless-stopped
   frontend:
-    image: marwanmw/dokkan-frontend:__BUILD_NUMBER__
+    image: mohamedemonem/dokkan-frontend:__BUILD_NUMBER__
     depends_on:
       backend:
         condition: service_started

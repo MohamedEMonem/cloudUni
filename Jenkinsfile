@@ -1,8 +1,8 @@
 pipeline{
     agent any
     environment{
-        DOCKER_IMAGE_FRONT = 'marwanmw/dokkan-frontend'
-        DOCKER_IMAGE_BACK = 'marwanmw/dokkan-backend'
+        DOCKER_IMAGE_FRONT = 'mohamedemonem/dokkan-frontend'
+        DOCKER_IMAGE_BACK = 'mohamedemonem/dokkan-backend'
         EB_APP_NAME = "Dokkan"
         EB_ENV_NAME = "Dokkan-env"
         AWS_REGION = "us-east-1"
@@ -44,7 +44,19 @@ pipeline{
             steps{
                 sh 'rm -f deploy.zip'
                 sh "sed -i 's/__BUILD_NUMBER__/${BUILD_NUMBER}/g' docker-compose.yml"
-                sh 'zip deploy.zip docker-compose.yml Backend/.env' 
+                sh 'zip deploy.zip docker-compose.yml Backend/.env'
+                sh '''
+                    # Parse .env file and create EB option-settings JSON
+                    echo "Parsing environment variables from Backend/.env..."
+                    cat Backend/.env | grep -v '^#' | grep -v '^$' > /tmp/env_vars.txt
+                    echo "OPTIONS_JSON=" > /tmp/eb_options.sh
+                    while IFS='=' read -r key value; do
+                        if [ ! -z "$key" ]; then
+                            echo "{Namespace=aws:elasticbeanstalk:application:environment,OptionName=$key,Value=$value}"
+                        fi
+                    done < /tmp/env_vars.txt > /tmp/eb_options.txt
+                    cat /tmp/eb_options.txt
+                '''
             }
         }
         // stage('Upload to S3 (The Artifactory)') {
@@ -66,8 +78,29 @@ pipeline{
                         --version-label dokkan-${BUILD_NUMBER} \
                         --source-bundle S3Bucket="${S3_BUCKET}",S3Key="deploy-build-${BUILD_NUMBER}.zip"
                     """
-                
-                
+                    
+                    sh '''
+                        echo "Setting environment variables on Elastic Beanstalk..."
+                        
+                        # Build option-settings array from .env file
+                        OPTIONS=""
+                        while IFS='=' read -r key value; do
+                            if [ ! -z "$key" ] && [[ ! "$key" =~ ^# ]]; then
+                                # Escape quotes in values
+                                value=$(echo "$value" | sed 's/"/\\"/g')
+                                OPTIONS="${OPTIONS} Namespace=aws:elasticbeanstalk:application:environment,OptionName=${key},Value=${value}"
+                            fi
+                        done < Backend/.env
+                        
+                        if [ ! -z "$OPTIONS" ]; then
+                            aws elasticbeanstalk update-environment \
+                            --region ${AWS_REGION} \
+                            --application-name ${EB_APP_NAME} \
+                            --environment-name ${EB_ENV_NAME} \
+                            --option-settings $OPTIONS
+                        fi
+                    '''
+                    
                     sh """
                         aws elasticbeanstalk update-environment \
                         --region ${AWS_REGION} \

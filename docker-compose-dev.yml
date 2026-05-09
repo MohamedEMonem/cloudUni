@@ -92,7 +92,7 @@ services:
       DB_WAIT_RETRIES: ${DB_WAIT_RETRIES:-60}
     restart: unless-stopped
   frontend:
-    image: marwanmw/dokkan-frontend
+    image: mohamedemonem/dokkan-frontend
     depends_on:
       backend:
         condition: service_started
