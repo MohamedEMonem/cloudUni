@@ -48,10 +48,10 @@ pipeline{
                     echo "Packaging deployment files..."
                     if [ -f Backend/.env ]; then
                         echo "Backend/.env found, including in deployment package..."
-                        zip deploy.zip docker-compose.yml Backend/.env
+                        zip -r deploy.zip docker-compose.yml Backend/.env .ebextensions
                     else
                         echo "Backend/.env not found, packaging without it..."
-                        zip deploy.zip docker-compose.yml
+                        zip -r deploy.zip docker-compose.yml .ebextensions
                     fi
                 '''
             }
@@ -75,41 +75,6 @@ pipeline{
                         --version-label dokkan-${BUILD_NUMBER} \
                         --source-bundle S3Bucket="${S3_BUCKET}",S3Key="deploy-build-${BUILD_NUMBER}.zip"
                     """
-                    
-                    sh '''
-                        echo "Setting environment variables on Elastic Beanstalk from .ebextensions..."
-                        
-                        # Parse .ebextensions/01_environment.config and extract environment variables
-                        if [ -f .ebextensions/01_environment.config ]; then
-                            echo "Found .ebextensions/01_environment.config, parsing variables..."
-                            
-                            # Build option-settings from .ebextensions/01_environment.config
-                            OPTIONS=""
-                            
-                            # Extract environment variables using grep and awk
-                            while IFS=: read -r key value; do
-                                key=$(echo "$key" | xargs)  # Trim whitespace
-                                value=$(echo "$value" | xargs | sed "s/'//g")  # Trim and remove quotes
-                                
-                                if [ ! -z "$key" ] && [[ ! "$key" =~ ^# ]]; then
-                                    # Escape special characters in values
-                                    value=$(echo "$value" | sed 's/"/\\"/g')
-                                    OPTIONS="${OPTIONS} Namespace=aws:elasticbeanstalk:application:environment,OptionName=${key},Value=\"${value}\""
-                                fi
-                            done < <(grep -A 100 "aws:elasticbeanstalk:application:environment:" .ebextensions/01_environment.config | grep -v "^option_settings:" | grep -v "^  aws:" | grep -v "^$" | sed 's/^[[:space:]]*//')
-                            
-                            if [ ! -z "$OPTIONS" ]; then
-                                echo "Applying environment variables to ${EB_ENV_NAME}..."
-                                aws elasticbeanstalk update-environment \
-                                --region ${AWS_REGION} \
-                                --application-name ${EB_APP_NAME} \
-                                --environment-name ${EB_ENV_NAME} \
-                                --option-settings $OPTIONS
-                            fi
-                        else
-                            echo "Warning: .ebextensions/01_environment.config not found"
-                        fi
-                    '''
                     
                     sh """
                         echo "Deploying new application version to Elastic Beanstalk..."
