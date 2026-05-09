@@ -111,10 +111,11 @@ services:
         condition: service_started
     environment:
       NODE_ENV: production
-      PORT: 5000
+      # You can safely remove the PORT: 5000 variable here since Nginx doesn't use it
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000/api}
     ports:
-      # This is the magic line: Host Port 80 -> Container Port 5000
-      - "80:5000"
+      # FIX: Route Host Port 80 to Container Port 80 (Nginx)
+      - "80:80"
     restart: unless-stopped
 
 volumes:

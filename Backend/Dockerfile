@@ -31,10 +31,16 @@ FROM node:22-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+# ✅ FIX 1: Install OpenSSL (Required by Prisma in production)
+RUN apt-get update -y && apt-get install -y openssl
+
 # Keep `package.json` so Node treats output as ESM (`"type": "module"`)
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+
+# ✅ FIX 2: Copy Prisma schema so your prostartup.sh migrations can run
+COPY --from=builder /app/prisma ./prisma
 
 # Runtime files loaded from disk
 COPY --from=builder /app/swagger-output.json ./swagger-output.json
