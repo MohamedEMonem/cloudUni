@@ -56,7 +56,7 @@ services:
   backend:
     image: marwanmw/dokkan-backend:__BUILD_NUMBER__
     env_file:
-      - ./.env
+      - ./Backend/.env
     depends_on:
       postgres:
         condition: service_healthy
