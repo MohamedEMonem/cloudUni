@@ -44,7 +44,7 @@ pipeline{
             steps{
                 sh 'rm -f deploy.zip'
                 sh "sed -i 's/__BUILD_NUMBER__/${BUILD_NUMBER}/g' docker-compose.yml"
-                sh 'zip deploy.zip docker-compose.yml'
+                sh 'zip deploy.zip docker-compose.yml Backend/.env' 
             }
         }
         // stage('Upload to S3 (The Artifactory)') {

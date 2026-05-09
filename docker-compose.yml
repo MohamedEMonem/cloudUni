@@ -49,45 +49,14 @@ services:
     restart: always
 
   # -----------------------------
-  # MinIO (S3 Compatible Storage)
-  # -----------------------------
-  minio:
-    image: minio/minio
-    container_name: nx_minio
-    ports:
-      - "9000:9000" # API Port
-      - "9001:9001" # Console Port
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
-    # MinIO command to start server and define console port
-    command: server /data --console-address ":9001"
-    volumes:
-      - minio_data:/data
-    networks:
-      - nx_network
-    restart: always
-
-  # -----------------------------
   # Mailpit (Local Email Testing)
   # -----------------------------
-  mailpit:
-    image: axllent/mailpit:latest
-    container_name: nx_mailpit
-    ports:
-      - "8025:8025" # Web UI (View your emails in the browser)
-      - "1025:1025" # SMTP Port (What your Backend connects to)
-    environment:
-      # Optional: Keep the container lightweight by only storing the last 500 emails
-      - MP_MAX_MESSAGES=500
-    networks:
-      - nx_network
-    restart: always
+
 
   backend:
-    image: marwanmw/dokkan-backend
+    image: marwanmw/dokkan-backend:__BUILD_NUMBER__
     env_file:
-      - ./Backend/.env
+      - ./.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -95,13 +64,11 @@ services:
         condition: service_started
       meilisearch:
         condition: service_started
-      minio:
-        condition: service_started
     ports:
       - "${PORT:-3000}:3000"
     restart: unless-stopped
   frontend:
-    image: marwanmw/dokkan-frontend
+    image: marwanmw/dokkan-frontend:__BUILD_NUMBER__
     depends_on:
       backend:
         condition: service_started
@@ -117,7 +84,6 @@ volumes:
   postgres_data:
   redis_data:
   meili_data:
-  minio_data:
 
 networks:
   nx_network:
