@@ -44,41 +44,32 @@ pipeline{
             steps{
                 withCredentials([
                     string(credentialsId: 'database-url', variable: 'DATABASE_URL'),
-                    string(credentialsId: 'jwt-secret', variable: 'JWT_SECRET'),
-                    string(credentialsId: 'refresh-token-secret', variable: 'REFRESH_TOKEN_SECRET'),
-                    string(credentialsId: 'postgres-user', variable: 'POSTGRES_USER'),
-                    string(credentialsId: 'postgres-password', variable: 'POSTGRES_PASSWORD'),
-                    string(credentialsId: 'postgres-db', variable: 'POSTGRES_DB'),
-                    string(credentialsId: 'redis-host', variable: 'REDIS_HOST'),
-                    string(credentialsId: 'cors-origin', variable: 'CORS_ORIGIN')
+                    string(credentialsId: 'jwt-secret', variable: 'JWT_SECRET')
                 ]){
                     sh '''
-                        # Create .env file from Jenkins Secrets
+                        # Create .env file from Jenkins Secrets (Essential only)
                         echo "Creating Backend/.env from Jenkins credentials..."
                         cat > Backend/.env << EOF
 # Server
 PORT=3000
 JWT_SECRET=${JWT_SECRET}
-REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+REFRESH_TOKEN_SECRET=secure-refresh-token-change-in-production
 REFRESH_TOKEN_EXPIRES_IN=7d
 REFRESH_TOKEN_PREFIX=refresh
 REFRESH_COOKIE_NAME=refreshToken
 REFRESH_COOKIE_SAMESITE=lax
-REFRESH_COOKIE_SECURE=false
+REFRESH_COOKIE_SECURE=true
 REFRESH_COOKIE_PATH=/api/auth
 
-# Frontend CORS origin(s)
-CORS_ORIGIN=${CORS_ORIGIN}
+# Frontend CORS origin(s) - UPDATE IN ELASTIC BEANSTALK CONSOLE
+CORS_ORIGIN=https://yourdomain.com
 
-# PostgreSQL
-POSTGRES_USER=${POSTGRES_USER}
-POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-POSTGRES_DB=${POSTGRES_DB}
-POSTGRES_PORT=5432
+# PostgreSQL - Injected from Jenkins Secret
 DATABASE_URL=${DATABASE_URL}
+POSTGRES_PORT=5432
 
-# Redis
-REDIS_HOST=${REDIS_HOST}
+# Redis - UPDATE IN ELASTIC BEANSTALK CONSOLE if needed
+REDIS_HOST=redis.elasticache.amazonaws.com
 REDIS_PORT=6379
 
 # Meilisearch
