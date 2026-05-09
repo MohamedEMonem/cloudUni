@@ -6,7 +6,7 @@ pipeline{
         EB_APP_NAME = "Dokkan"
         EB_ENV_NAME = "Dokkan-env"
         AWS_REGION = "us-east-1"
-        S3_BUCKET = "prod-dokkan"
+        S3_BUCKET = "dokkan-s3-europe1"
 
     }
     stages{
