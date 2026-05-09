@@ -5,8 +5,8 @@ pipeline{
         DOCKER_IMAGE_BACK = 'marwanmw/dokkan-backend'
         EB_APP_NAME = "dokkan-app1"
         EB_ENV_NAME = "Dokkan-app1-env"
-        AWS_REGION = "eu-central-1"
-        S3_BUCKET = "dokkan-s3-europe"
+        AWS_REGION = "us-east-1"
+        S3_BUCKET = "dokkan-s3-europe1"
 
     }
     stages{
