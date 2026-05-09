@@ -17,7 +17,11 @@ services:
       - nx_network
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-admin} -d $${POSTGRES_DB:-my_app_db}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER:-admin} -d $${POSTGRES_DB:-my_app_db}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -57,11 +61,38 @@ services:
   # Mailpit (Local Email Testing)
   # -----------------------------
 
-
   backend:
     image: mohamedemonem/dokkan-backend:__BUILD_NUMBER__
-    env_file:
-      - ./Backend/.env
+    # 1. DELETE the env_file lines
+    # 2. ADD this environment block to map the variables from Elastic Beanstalk
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - JWT_SECRET=${JWT_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - REFRESH_TOKEN_EXPIRES_IN=${REFRESH_TOKEN_EXPIRES_IN}
+      - REFRESH_TOKEN_PREFIX=${REFRESH_TOKEN_PREFIX}
+      - REFRESH_COOKIE_NAME=${REFRESH_COOKIE_NAME}
+      - REFRESH_COOKIE_SAMESITE=${REFRESH_COOKIE_SAMESITE}
+      - REFRESH_COOKIE_SECURE=${REFRESH_COOKIE_SECURE}
+      - REFRESH_COOKIE_PATH=${REFRESH_COOKIE_PATH}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+      - MEILI_PORT=${MEILI_PORT}
+      - MEILI_HOST=${MEILI_HOST:-nx_meilisearch}
+      - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}
+      - AWS_S3_REGION=${AWS_S3_REGION}
+      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL}
+      - AUTO_SEED=${AUTO_SEED}
+      - DB_WAIT_RETRIES=${DB_WAIT_RETRIES}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - EMAIL_FROM=${EMAIL_FROM}
     depends_on:
       postgres:
         condition: service_healthy
@@ -72,6 +103,7 @@ services:
     ports:
       - "${PORT:-3000}:3000"
     restart: unless-stopped
+
   frontend:
     image: mohamedemonem/dokkan-frontend:__BUILD_NUMBER__
     depends_on:
