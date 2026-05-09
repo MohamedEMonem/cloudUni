@@ -1,11 +1,8 @@
-import { bucketExistsAsync,
-    makeBucketAsync,
-    setBucketPolicyAsync,
+import {
     putObjectAsync,
-    setupBucket,
-        deleteObjectAsync
-} from "../utils/minioClient.js";
-import minioClient from "../config/minio.config.js";
+    deleteObjectAsync
+} from "../utils/s3Client.js";
+import s3Client from "../config/s3.config.js";
 
 import crypto from "crypto";
 import sharp from "sharp";
@@ -88,7 +85,7 @@ const uploadPublicImg = async (file, clientEmail, clientRole, subFolder) => {
 
         await putObjectAsync({ bucket: publicBucketName, objectName, buffer, size: buffer.length, meta: { "Content-Type": "image/webp" } });
 
-        const imgUrl = `${process.env.MINIO_PUBLIC_URL}/${publicBucketName}/${objectName}`;
+        const imgUrl = `https://${publicBucketName}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${objectName}`;
         return imgUrl;
     }
     catch (err) {
