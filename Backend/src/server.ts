@@ -18,14 +18,35 @@ dotenv.config();
 const app = express();
 // const uploadRoutes = require('./routes/upload.js');
 
-const allowedOrigins = (
+const normalizeOrigin = (origin: string) => {
+  const trimmedOrigin = origin.trim();
+
+  try {
+    const url = new URL(trimmedOrigin);
+
+    if (
+      (url.protocol === "http:" && url.port === "80") ||
+      (url.protocol === "https:" && url.port === "443")
+    ) {
+      url.port = "";
+    }
+
+    return url.origin;
+  } catch {
+    return trimmedOrigin;
+  }
+};
+
+const allowedOrigins = new Set(
+  (
   process.env.CORS_ORIGIN ||
   process.env.FRONTEND_URL ||
   "http://localhost:5000"
-)
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+  )
+    .split(",")
+    .map(normalizeOrigin)
+    .filter(Boolean),
+);
 
 // Middleware
 app.use(express.json());
@@ -37,7 +58,7 @@ app.use(
       origin: string | undefined,
       callback: (err: Error | null, allow?: boolean) => void,
     ) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.has(normalizeOrigin(origin))) {
         callback(null, true);
         return;
       }
