@@ -11,7 +11,6 @@ RUN npm ci
 
 # Prisma client generation
 COPY prisma ./prisma
-COPY prisma.config.js ./
 
 # Prisma config in this repo reads DATABASE_URL. Provide a harmless default so
 # `prisma generate` doesn't fail during docker build.
