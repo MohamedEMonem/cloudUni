@@ -23,7 +23,7 @@ pipeline{
                 sh 'docker build -t ${DOCKER_IMAGE_BACK}:${BUILD_NUMBER} -t ${DOCKER_IMAGE_BACK}:latest ./Backend/'
                 
                 // 2. Build the Frontend (with the AWS API URL injected)
-                sh 'docker build --build-arg VITE_API_URL=http://dokkan.us-east-1.elasticbeanstalk.com/api -f ./Frontend/Dockerfile -t ${DOCKER_IMAGE_FRONT}:${BUILD_NUMBER} -t ${DOCKER_IMAGE_FRONT}:latest ./'
+                sh 'docker build --build-arg VITE_API_URL=http://dokkan.us-east-1.elasticbeanstalk.com:3000/api -f ./Frontend/Dockerfile -t ${DOCKER_IMAGE_FRONT}:${BUILD_NUMBER} -t ${DOCKER_IMAGE_FRONT}:latest ./'
             }
         }
 
