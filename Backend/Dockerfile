@@ -1,6 +1,9 @@
-FROM node:22-slim AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
+
+# Install OpenSSL (Required by Prisma during build)
+RUN apk add --no-cache openssl
 
 # Install all deps (incl. dev) so we can run Prisma CLI + TypeScript build
 COPY package*.json ./
@@ -26,7 +29,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 
-FROM node:22-slim AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 ENV NODE_ENV=production
@@ -36,7 +39,7 @@ ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
 
 # ✅ FIX 1: Install OpenSSL (Required by Prisma in production)
-RUN apt-get update -y && apt-get install -y openssl
+RUN apk add --no-cache openssl
 
 # Keep `package.json` so Node treats output as ESM (`"type": "module"`)
 COPY --from=builder /app/package*.json ./
