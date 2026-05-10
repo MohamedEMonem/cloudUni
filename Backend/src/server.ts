@@ -37,8 +37,11 @@ const normalizeOrigin = (origin: string) => {
   }
 };
 
+const stripWrappingQuotes = (value: string | undefined) => (value ? value.replace(/^['\"]|['\"]$/g, "").trim() : "");
+
 const configuredOrigins = [process.env.CORS_ORIGIN, process.env.FRONTEND_URL]
   .filter(Boolean)
+  .map(stripWrappingQuotes)
   .join(",");
 
 const allowedOrigins = new Set(
