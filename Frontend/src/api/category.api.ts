@@ -10,7 +10,7 @@ export const categoryApi = apiSlice.injectEndpoints({
       void
     >({
       query: () => ({
-        url: "/categories",
+        url: "categories",
         method: "GET",
       }),
       providesTags: ["Category"],
@@ -21,7 +21,7 @@ export const categoryApi = apiSlice.injectEndpoints({
       CreateCategoryDTO
     >({  
       query: (categoryData) => ({
-        url: "/categories",
+        url: "categories",
         method: "POST",
         body: categoryData,
       }),
@@ -33,7 +33,7 @@ export const categoryApi = apiSlice.injectEndpoints({
       UpdateCategoryDTO
     >({
       query: ({ id, data }) => ({
-        url: `/categories/${id}`,
+        url: `categories/${id}`,
         method: "PATCH",
         body: data,
       }),
@@ -45,7 +45,7 @@ export const categoryApi = apiSlice.injectEndpoints({
       { id: string }
     >({
       query: ({ id }) => ({
-        url: `/categories/${id}`,
+        url: `categories/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Category"],

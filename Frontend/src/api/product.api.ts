@@ -10,7 +10,7 @@ export const productApi = apiSlice.injectEndpoints({
       void
     >({
       query: () => ({
-        url: "/products",
+        url: "products",
         method: "GET",
       }),
       providesTags: ["Product"],
@@ -21,7 +21,7 @@ export const productApi = apiSlice.injectEndpoints({
       { id: string }
     >({
       query: ({ id }) => ({
-        url: `/products/${id}`,
+        url: `products/${id}`,
         method: "GET",
       }),
       providesTags: ["Product"],
@@ -32,7 +32,7 @@ export const productApi = apiSlice.injectEndpoints({
       string
     >({
       query: (storeId) => ({
-        url: `/products?storeId=${storeId}`,
+        url: `products?storeId=${storeId}`,
         method: "GET",
       }),
       providesTags: ["Product"],
@@ -43,7 +43,7 @@ export const productApi = apiSlice.injectEndpoints({
       CreateProductDTO
     >({
       query: (productData) => ({
-        url: "/products",
+        url: "products",
         method: "POST",
         body: productData,
       }),
@@ -55,7 +55,7 @@ export const productApi = apiSlice.injectEndpoints({
       UpdateProductDTO
     >({
       query: ({ id, data }) => ({
-        url: `/products/${id}`,
+        url: `products/${id}`,
         method: "PATCH",
         body: data,
       }),
@@ -67,7 +67,7 @@ export const productApi = apiSlice.injectEndpoints({
       { id: string }
     >({
       query: ({ id }) => ({
-        url: `/products/${id}`,
+        url: `products/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Product"],

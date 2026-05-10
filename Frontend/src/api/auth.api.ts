@@ -10,7 +10,7 @@ export const authApi = apiSlice.injectEndpoints({
       RegisterDTO
     >({
       query: (credentials) => ({
-        url: "/auth/register",
+        url: "auth/register",
         method: "POST",
         body: credentials,
       }),
@@ -21,7 +21,7 @@ export const authApi = apiSlice.injectEndpoints({
       LoginDTO
     >({
       query: (credentials) => ({
-        url: "/auth/login",
+        url: "auth/login",
         method: "POST",
         body: credentials,
       }),

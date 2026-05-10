@@ -5,10 +5,12 @@ const apiBaseUrl =
   import.meta.env.VITE_SERVER_DEV_API_URL ||
   '/api';
 
+const normalizedApiBaseUrl = apiBaseUrl.endsWith('/') ? apiBaseUrl : `${apiBaseUrl}/`;
+
 export const apiSlice = createApi({
   reducerPath: 'apiSlice',
   baseQuery: fetchBaseQuery({
-    baseUrl: apiBaseUrl,
+    baseUrl: normalizedApiBaseUrl,
     prepareHeaders: (headers) => {
       const token = localStorage.getItem('token');
       if (token) {
