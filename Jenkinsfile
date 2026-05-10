@@ -3,8 +3,8 @@ pipeline{
     environment{
         DOCKER_IMAGE_FRONT = 'mohamedemonem/dokkan-frontend'
         DOCKER_IMAGE_BACK = 'mohamedemonem/dokkan-backend'
-        EB_APP_NAME = "Dokkan"
-        EB_ENV_NAME = "Dokkan-env"
+        EB_APP_NAME = "the-dokkan"
+        EB_ENV_NAME = "The-dokkan-env"
         AWS_REGION = "us-east-1"
         S3_BUCKET = "dokkan-s3-europe1"
 
