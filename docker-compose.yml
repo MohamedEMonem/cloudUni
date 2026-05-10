@@ -1,4 +1,14 @@
 services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - nx_network
+    restart: unless-stopped
+
   backend:
     image: mohamedemonem/dokkan-backend:__BUILD_NUMBER__
     # 1. DELETE the env_file lines
@@ -16,6 +26,7 @@ services:
       - REFRESH_COOKIE_PATH=${REFRESH_COOKIE_PATH}
       - CORS_ORIGIN=${CORS_ORIGIN}
       - DATABASE_URL=${DATABASE_URL} 
+      - REDIS_URL=${REDIS_URL}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
@@ -33,6 +44,8 @@ services:
       - EMAIL_FROM=${EMAIL_FROM}
     ports:
       - "${PORT:-3000}:3000"
+    networks:
+      - nx_network
     restart: unless-stopped
 
   frontend:
@@ -47,8 +60,13 @@ services:
     ports:
       # FIX: Route Host Port 80 to Container Port 80 (Nginx)
       - "80:80"
+    networks:
+      - nx_network
     restart: unless-stopped
     
 networks:
   nx_network:
     driver: bridge
+
+volumes:
+  redis_data:
