@@ -31,6 +31,10 @@ FROM node:22-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+# Redefine the ARG and ENV in the runner stage so it exists at runtime
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
+
 # ✅ FIX 1: Install OpenSSL (Required by Prisma in production)
 RUN apt-get update -y && apt-get install -y openssl
 
