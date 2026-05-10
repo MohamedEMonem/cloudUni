@@ -37,12 +37,12 @@ const normalizeOrigin = (origin: string) => {
   }
 };
 
+const configuredOrigins = [process.env.CORS_ORIGIN, process.env.FRONTEND_URL]
+  .filter(Boolean)
+  .join(",");
+
 const allowedOrigins = new Set(
-  (
-  process.env.CORS_ORIGIN ||
-  process.env.FRONTEND_URL ||
-  "http://localhost:5000"
-  )
+  (configuredOrigins || "http://localhost:5000")
     .split(",")
     .map(normalizeOrigin)
     .filter(Boolean),
