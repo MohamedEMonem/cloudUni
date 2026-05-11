@@ -106,7 +106,13 @@ app.use((req, res) => {
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error(`[ERROR] ${req.method} ${req.originalUrl} >>`, err);
   const statusCode = err?.status || err?.statusCode || 500;
-  const message = process.env.NODE_ENV === "production" ? "Internal Server Error" : err?.message || "Internal Server Error";
+  const isClientError = statusCode >= 400 && statusCode < 500;
+  const message =
+    process.env.NODE_ENV === "production"
+      ? isClientError
+        ? err?.message || "Request failed"
+        : "Internal Server Error"
+      : err?.message || "Internal Server Error";
   return sendError(res, message, statusCode);
 });
 

@@ -82,11 +82,18 @@ export function StoreSetup() {
         variant: "success",
       });
     } catch (error: any) {
-      const isConflict = error?.status === 409;
+      const statusCode = error?.status || error?.originalStatus || error?.data?.code;
+      const isConflict = statusCode === 409;
+
+      const apiMessage =
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.error ||
+        error?.message;
 
       const errorMessage = isConflict
         ? "هذا الدومين الفرعي مستخدم بالفعل. جرّب اسماً آخر."
-        : error?.data?.message || "تعذر إنشاء المتجر. حاول مرة أخرى.";
+        : apiMessage || "تعذر إنشاء المتجر. حاول مرة أخرى.";
 
       showNotification({
         message: errorMessage,
