@@ -34,7 +34,11 @@ export default function Profile() {
   const [verifyOtp, { isLoading: isVerifyingOtp }] = useVerifyOtpMutation();
   const [resendOtp, { isLoading: isResendingOtp }] = useResendOtpMutation();
 
-  const profile = profileResponse?.data;
+  const profile = useMemo(() => {
+    const payload = profileResponse?.data as any;
+    if (!payload) return null;
+    return payload?.user ?? payload;
+  }, [profileResponse]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState("");
@@ -74,7 +78,14 @@ export default function Profile() {
         profilePhotoUrl: profilePhotoUrl.trim() || null,
       }).unwrap();
 
-      localStorage.setItem("user", JSON.stringify(response.data));
+      const updatedProfile = (response?.data as any)?.user ?? response?.data;
+      if (updatedProfile) {
+        localStorage.setItem("user", JSON.stringify(updatedProfile));
+        setName(updatedProfile.name || "");
+        setContactNumber(updatedProfile.contactNumber || "");
+        setProfilePhotoUrl(updatedProfile.profilePhotoUrl || "");
+      }
+
       setIsEditing(false);
       showNotification({ message: "تم تحديث الملف الشخصي بنجاح", variant: "success" });
       void refetch();
@@ -244,7 +255,7 @@ export default function Profile() {
             <Input
               label="البريد الإلكتروني"
               icon={<Mail className="w-4 h-4" />}
-              value={profile.email}
+              value={profile.email || ""}
               disabled
             />
             <Input

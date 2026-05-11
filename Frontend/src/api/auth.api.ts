@@ -13,6 +13,10 @@ interface IPatchProfilePayload {
   profilePhotoUrl?: string | null;
 }
 
+interface IUserEnvelope {
+  user: IUser;
+}
+
 export const authApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     register: builder.mutation<
@@ -51,14 +55,14 @@ export const authApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Auth"],
     }),
-    getProfile: builder.query<IAPIResponse<IUser>, void>({
+    getProfile: builder.query<IAPIResponse<IUserEnvelope>, void>({
       query: () => ({
         url: "auth/profile",
         method: "GET",
       }),
       providesTags: ["Auth"],
     }),
-    patchProfile: builder.mutation<IAPIResponse<IUser>, IPatchProfilePayload>({
+    patchProfile: builder.mutation<IAPIResponse<IUserEnvelope>, IPatchProfilePayload>({
       query: (payload) => ({
         url: "auth/profile",
         method: "PATCH",
