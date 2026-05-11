@@ -21,6 +21,7 @@ export function StoreSetup() {
   const [subdomain, setSubdomain] = useState("");
   const [description, setDescription] = useState("");
   const [isDirtySubdomain, setIsDirtySubdomain] = useState(false);
+  const [isSuccessLocked, setIsSuccessLocked] = useState(false);
 
   const [createStore, { isLoading }] = useCreateStoreMutation();
   const { refetchStores, setSelectedStoreSlug } = useOwnerStore();
@@ -55,17 +56,27 @@ export function StoreSetup() {
 
       await refetchStores();
       setSelectedStoreSlug(normalizedSubdomain);
+      setIsSuccessLocked(true);
 
       showNotification({
         message: "تم إنشاء المتجر بنجاح. يمكنك الآن إضافة منتجاتك.",
         variant: "success",
       });
     } catch (error: any) {
-      const errorMessage = error?.data?.message || "تعذر إنشاء المتجر. حاول مرة أخرى.";
+      const isConflict = error?.status === 409;
+
+      const errorMessage = isConflict
+        ? "هذا الدومين الفرعي مستخدم بالفعل. جرّب اسماً آخر."
+        : error?.data?.message || "تعذر إنشاء المتجر. حاول مرة أخرى.";
+
       showNotification({
         message: errorMessage,
         variant: "error",
       });
+
+      if (isConflict) {
+        setIsDirtySubdomain(true);
+      }
     }
   };
 
@@ -116,10 +127,14 @@ export function StoreSetup() {
           type="submit"
           variant="primary"
           className="w-full h-10!"
-          disabled={isLoading}
+          disabled={isLoading || isSuccessLocked}
           icon={!isLoading ? <Sparkles className="w-4 h-4" /> : undefined}
         >
-          {isLoading ? "جاري إنشاء المتجر..." : "إنشاء المتجر والمتابعة"}
+          {isLoading
+            ? "جاري إنشاء المتجر..."
+            : isSuccessLocked
+              ? "تم إنشاء المتجر"
+              : "إنشاء المتجر والمتابعة"}
         </Button>
       </form>
     </div>
