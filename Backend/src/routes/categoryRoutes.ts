@@ -1,5 +1,5 @@
 import express from "express";
-import { auth, authAdmin } from "../middleware/auth.js";
+import { auth, authStoreOwner } from "../middleware/auth.js";
 import * as CategoryController from "../controllers/CategoryController.js";
 
 const router = express.Router({ mergeParams: true });
@@ -19,7 +19,7 @@ router.get("/:id",
 );
 
 router.use(auth);
-router.use(authAdmin);
+router.use(authStoreOwner);
 
 router.post("/", 
   /* #swagger.tags = ['Categories']

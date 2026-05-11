@@ -7,7 +7,15 @@ import { Loader2 } from "lucide-react";
 
 export default function DashboardLayout() {
   const role = localStorage.getItem("role");
-  const { currentStore, isStoreLoading, hasStore, isStoreError } = useOwnerStore();
+  const {
+    currentStore,
+    stores,
+    selectedStoreSlug,
+    setSelectedStoreSlug,
+    isStoreLoading,
+    hasStore,
+    isStoreError,
+  } = useOwnerStore();
 
   const isCustomer = role === EUserRole.Customer;
 
@@ -46,7 +54,12 @@ export default function DashboardLayout() {
       className="min-h-screen flex flex-col bg-linear-to-br from-bg-cream via-bg-cream to-accent-light"
       dir="rtl"
     >
-      <DashboardHeader storeName={currentStore?.name ?? "متجري"} />
+      <DashboardHeader
+        storeName={currentStore?.name ?? "متجري"}
+        stores={stores}
+        selectedStoreSlug={selectedStoreSlug}
+        onStoreChange={setSelectedStoreSlug}
+      />
 
       {/* Dashboard Content */}
       <main className="flex-1 w-full container mx-auto px-4 md:px-4 py-8">

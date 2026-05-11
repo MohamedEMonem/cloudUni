@@ -128,12 +128,11 @@ export const ProductForm = ({
         formData.append(field, String(value));
       }
     });
-    // Attach the image file if one was selected
-    selectedFiles
-      .filter((file): file is File => file !== null)
-      .forEach((file) => {
-        formData.append("image", file);
-      });
+    // Backend currently accepts one image via upload.single("image").
+    const firstImage = selectedFiles.find((file): file is File => file !== null);
+    if (firstImage) {
+      formData.append("image", firstImage);
+    }
 
     onSubmit(formData);
   };

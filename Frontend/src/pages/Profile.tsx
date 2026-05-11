@@ -1,276 +1,326 @@
-import { useState } from "react";
-import clsx from "clsx";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CircleUser,
-  Camera,
   Mail,
   Phone,
   ShieldCheck,
   Calendar,
-  Lock,
+  LogOut,
+  Trash2,
+  KeyRound,
+  RefreshCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Input } from "@/components/ui/Input";
-import { EUserRole } from "@/types/entities/user.types";
-
+import { UserAvatar } from "@/components/ui/UserAvatar";
+import {
+  useDeleteAccountMutation,
+  useGetProfileQuery,
+  useLogoutMutation,
+  usePatchProfileMutation,
+  useResendOtpMutation,
+  useVerifyOtpMutation,
+} from "@/api/auth.api";
+import { showNotification } from "@/utils/showNotification";
 
 export default function Profile() {
-  // Read auth data from localStorage
-  const userRaw = localStorage.getItem("user");
-  const user = userRaw ? JSON.parse(userRaw) : null;
+  const navigate = useNavigate();
+
+  const { data: profileResponse, isLoading, isError, refetch } = useGetProfileQuery();
+  const [patchProfile, { isLoading: isSaving }] = usePatchProfileMutation();
+  const [logoutApi, { isLoading: isLoggingOut }] = useLogoutMutation();
+  const [deleteAccount, { isLoading: isDeleting }] = useDeleteAccountMutation();
+  const [verifyOtp, { isLoading: isVerifyingOtp }] = useVerifyOtpMutation();
+  const [resendOtp, { isLoading: isResendingOtp }] = useResendOtpMutation();
+
+  const profile = profileResponse?.data;
+
   const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState("");
+  const [otp, setOtp] = useState("");
 
-  if (!user) return null;
+  useEffect(() => {
+    if (!profile) return;
 
-  // Role translation mapping
-  const roleTranslation: Record<string, string> = {
-    Customer: "عميل",
-    StoreOwner: "بائع",
-    Admin: "ادمن",
+    setName(profile.name || "");
+    setContactNumber(profile.contactNumber || "");
+    setProfilePhotoUrl(profile.profilePhotoUrl || "");
+  }, [profile]);
+
+  const roleLabel = useMemo(() => {
+    const role = profile?.role;
+    if (role === "StoreOwner") return "بائع";
+    if (role === "Admin") return "أدمن";
+    return "عميل";
+  }, [profile?.role]);
+
+  const createdAt = useMemo(() => {
+    if (!profile?.createdAt) return "غير متوفر";
+    return new Date(profile.createdAt).toLocaleDateString("ar-EG", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }, [profile?.createdAt]);
+
+  const handleSave = async () => {
+    try {
+      const response = await patchProfile({
+        name: name.trim() || undefined,
+        contactNumber: contactNumber.trim() || null,
+        profilePhotoUrl: profilePhotoUrl.trim() || null,
+      }).unwrap();
+
+      localStorage.setItem("user", JSON.stringify(response.data));
+      setIsEditing(false);
+      showNotification({ message: "تم تحديث الملف الشخصي بنجاح", variant: "success" });
+      void refetch();
+    } catch (error: any) {
+      showNotification({
+        message: error?.data?.message || "تعذر تحديث الملف الشخصي",
+        variant: "error",
+      });
+    }
   };
 
-  const accountTypeTranslation: Record<string, string> = {
-    Customer: "حساب مشتري",
-    StoreOwner: "حساب بائع",
-    Admin: "حساب مدير النظام",
+  const handleVerifyOtp = async () => {
+    if (!otp.trim()) {
+      showNotification({ message: "أدخل رمز OTP أولاً", variant: "error" });
+      return;
+    }
+
+    try {
+      await verifyOtp({ otp: otp.trim() }).unwrap();
+      setOtp("");
+      showNotification({ message: "تم التحقق من البريد بنجاح", variant: "success" });
+      void refetch();
+    } catch (error: any) {
+      showNotification({
+        message: error?.data?.message || "رمز OTP غير صحيح أو منتهي",
+        variant: "error",
+      });
+    }
   };
 
-  const formattedDate = user.createdAt
-    ? new Date(user.createdAt).toLocaleDateString("ar-EG", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : "غير متوفر";
+  const handleResendOtp = async () => {
+    try {
+      await resendOtp().unwrap();
+      showNotification({ message: "تم إرسال OTP جديد إلى بريدك", variant: "success" });
+    } catch (error: any) {
+      showNotification({
+        message: error?.data?.message || "تعذر إعادة إرسال OTP",
+        variant: "error",
+      });
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutApi().unwrap();
+    } catch {
+      // Ignore API logout failure and always clear local auth.
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("user");
+      localStorage.removeItem("ownerStoreSlug");
+      localStorage.removeItem("activeStoreSlug");
+      navigate("/auth/login");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm("هل أنت متأكد من حذف الحساب؟ لا يمكن التراجع.");
+    if (!confirmed) return;
+
+    try {
+      await deleteAccount().unwrap();
+      showNotification({ message: "تم حذف الحساب", variant: "success" });
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("user");
+      localStorage.removeItem("ownerStoreSlug");
+      localStorage.removeItem("activeStoreSlug");
+      navigate("/");
+    } catch (error: any) {
+      showNotification({
+        message: error?.data?.message || "تعذر حذف الحساب",
+        variant: "error",
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center" dir="rtl">
+        جاري تحميل الملف الشخصي...
+      </div>
+    );
+  }
+
+  if (isError || !profile) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-4" dir="rtl">
+        <div className="bg-white rounded-2xl border border-red-200 shadow-sm p-8 max-w-xl text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-3">تعذر تحميل الملف الشخصي</h1>
+          <Button variant="outline-accent" className="h-9!" onClick={() => void refetch()}>
+            <RefreshCcw className="w-4 h-4" />
+            إعادة المحاولة
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={clsx(
-      "min-h-screen flex flex-col",
-      user.role === EUserRole.Customer && "bg-linear-to-br from-bg-cream via-bg-cream to-accent-light"
-    )}>
-
-      <main className="flex-1 py-8 sm:py-12 px-4" dir="rtl">
-        <div className="max-w-4xl mx-auto">
-          {/* Header Section */}
-          <div className="text-center mb-10">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="size-16! bg-linear-to-br from-primary to-primary-light rounded-2xl flex items-center justify-center shadow-lg">
-                <CircleUser className="w-9 h-9 text-white" />
-              </div>
+    <div className="space-y-6" dir="rtl">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="bg-white rounded-2xl border border-accent-light/50 shadow-sm p-6">
+          <div className="text-center space-y-3">
+            <div className="mx-auto w-28 h-28 rounded-full overflow-hidden border-2 border-accent-light">
+              <UserAvatar
+                name={profile.name}
+                avatarUrl={profile.profilePhotoUrl}
+                className="w-full h-full rounded-none"
+              />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-text-dark mb-3">
-              حسابي الشخصي
-            </h1>
-            <p className="text-base sm:text-lg text-text-muted">
-              إدارة معلوماتك الشخصية وإعدادات الحساب
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Right Sidebar (Profile Info) */}
-            <div className="md:col-span-1">
-              <div className="bg-white rounded-2xl border-2 border-accent-light shadow-md p-6 sm:p-8">
-                <div className="text-center">
-                  <div className="relative inline-block mb-6">
-                    <div className="size-40! rounded-full overflow-hidden border-4 border-accent-light bg-bg-cream shadow-inner flex items-center justify-center">
-                      <UserAvatar
-                        name={user.name}
-                        avatarUrl={user.profilePhotoUrl}
-                        className="w-full h-full rounded-none"
-                        textClassName="text-6xl!"
-                      />
-                    </div>
-                    <label
-                      htmlFor="profile-image"
-                      className="absolute bottom-2 right-2 size-10! bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-dark transition-all shadow-lg hover:scale-110"
-                    >
-                      <Camera className="w-5 h-5 text-white" />
-                      <input
-                        id="profile-image"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                  <h3 className="text-2xl font-bold text-text-dark mb-1">
-                    {user.name}
-                  </h3>
-                  <p className="text-sm text-text-muted mb-4">{user.email}</p>
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 rounded-full border border-primary/20">
-                    <span className="text-sm font-bold text-primary">
-                      {roleTranslation[user.role]}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Left Main Area */}
-            <div className="md:col-span-2 space-y-8">
-              <div className="bg-white rounded-2xl border-2 border-accent-light shadow-md overflow-hidden">
-                <div className="p-5 sm:p-8">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-gray-100">
-                    <h2 className="text-xl sm:text-2xl font-bold text-text-dark">
-                      المعلومات الشخصية
-                    </h2>
-                    {!isEditing ? (
-                      <Button
-                        variant="primary"
-                        onClick={() => setIsEditing(true)}
-                        className="h-9! w-full sm:w-fit! px-8 rounded-full font-bold shadow-md hover:scale-105 transition-transform text-sm"
-                      >
-                        تعديل البيانات
-                      </Button>
-                    ) : (
-                      <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <Button
-                          variant="primary"
-                          onClick={() => setIsEditing(false)}
-                          className="h-9! flex-1 sm:w-24! bg-green-600 hover:bg-green-700 text-white rounded-full font-bold shadow-md transition-all text-sm"
-                        >
-                          حفظ
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          onClick={() => setIsEditing(false)}
-                          className="h-9! flex-1 sm:w-24! border-2 border-gray-200 text-text-muted hover:bg-gray-50 rounded-full font-bold transition-all text-sm"
-                        >
-                          إلغاء
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-6">
-                    <Input
-                      label="الاسم الكامل"
-                      icon={<CircleUser className="w-5 h-5" />}
-                      disabled={!isEditing}
-                      defaultValue={user.name}
-                      className={
-                        !isEditing ? "opacity-100 bg-gray-50/50" : "bg-white"
-                      }
-                    />
-
-                    <Input
-                      label="البريد الإلكتروني"
-                      type="email"
-                      icon={<Mail className="w-5 h-5" />}
-                      disabled={!isEditing}
-                      defaultValue={user.email}
-                      className={
-                        !isEditing ? "opacity-100 bg-gray-50/50" : "bg-white"
-                      }
-                    />
-
-                    <Input
-                      label="رقم الهاتف"
-                      type="tel"
-                      dir="rtl"
-                      icon={<Phone className="w-5 h-5" />}
-                      disabled={!isEditing}
-                      defaultValue={user.contactNumber || ""}
-                      placeholder="غير متوفر"
-                      className={
-                        !isEditing
-                          ? "opacity-100 bg-gray-50/50 text-left"
-                          : "bg-white text-left"
-                      }
-                    />
-                  </div>
-
-                  <div
-                    className={`pt-6 border-t-2 border-accent-light mt-10 ${isEditing ? "" : "hidden"}`}
-                  >
-                    <h3 className="text-lg text-text-dark mb-6 flex items-center gap-2">
-                      <Lock className="w-5 h-5 text-primary" />
-                      تغيير كلمة المرور
-                    </h3>
-                    <div className="space-y-6">
-                      <Input
-                        label="كلمة المرور الحالية"
-                        type="password"
-                        disabled={!isEditing}
-                        placeholder="أدخل كلمة المرور الحالية"
-                        className={
-                          !isEditing ? "opacity-100 bg-gray-50/50" : "bg-white"
-                        }
-                      />
-
-                      <Input
-                        label="كلمة المرور الجديدة"
-                        type="password"
-                        disabled={!isEditing}
-                        placeholder="أدخل كلمة المرور الجديدة"
-                        className={
-                          !isEditing ? "opacity-100 bg-gray-50/50" : "bg-white"
-                        }
-                      />
-
-                      <Input
-                        label="تأكيد كلمة المرور"
-                        type="password"
-                        disabled={!isEditing}
-                        placeholder="أعد إدخال كلمة المرور الجديدة"
-                        className={
-                          !isEditing ? "opacity-100 bg-gray-50/50" : "bg-white"
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  {!isEditing && (
-                    <div className="mt-10 p-5 bg-linear-to-l from-primary/5 to-accent-light/10 rounded-xl border border-primary/10 flex items-start gap-3">
-                      <span className="text-xl">💡</span>
-                      <p className="text-sm text-text-muted leading-relaxed">
-                        لتعديل معلوماتك الشخصية، اضغط على زر
-                        <span className="font-bold text-primary mx-1">
-                          "تعديل البيانات"
-                        </span>
-                        أعلاه.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Account Details Footer Card */}
-              <div className="bg-white rounded-2xl border-2 border-accent-light shadow-md p-6">
-                <h3 className="text-lg font-bold text-text-dark mb-6 flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-accent" />
-                  تفاصيل الحساب
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  <div className="flex flex-wrap items-center justify-between p-4 bg-bg-cream rounded-xl border border-accent-light/30 gap-y-2">
-                    <div className="flex items-center gap-3">
-                      <Calendar className="w-5 h-5 text-primary/60" />
-                      <span className="text-text-muted text-sm">
-                        تاريخ الإنشاء
-                      </span>
-                    </div>
-                    <span className="text-text-dark font-black">
-                      {formattedDate}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between p-4 bg-bg-cream rounded-xl border border-accent-light/30 gap-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-text-muted text-sm">
-                        نوع الحساب
-                      </span>
-                    </div>
-                    <span className="text-text-dark font-black text-xs sm:text-sm">
-                      {accountTypeTranslation[user.role]}
-                    </span>
-                  </div>
-                </div>
-              </div>
+            <h2 className="text-xl font-bold text-text-dark">{profile.name}</h2>
+            <p className="text-text-muted text-sm">{profile.email}</p>
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-bold">
+              <ShieldCheck className="w-4 h-4" />
+              {roleLabel}
+            </span>
+            <div className="text-sm text-text-muted flex items-center justify-center gap-2 pt-2">
+              <Calendar className="w-4 h-4" />
+              {createdAt}
             </div>
           </div>
         </div>
-      </main>
 
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-2xl border border-accent-light/50 shadow-sm p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-text-dark">المعلومات الشخصية</h3>
+              {isEditing ? (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline-accent"
+                    className="h-9! w-auto! px-4"
+                    onClick={() => setIsEditing(false)}
+                    disabled={isSaving}
+                  >
+                    إلغاء
+                  </Button>
+                  <Button
+                    variant="primary"
+                    className="h-9! w-auto! px-4"
+                    onClick={handleSave}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? "جاري الحفظ..." : "حفظ"}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="primary"
+                  className="h-9! w-auto! px-4"
+                  onClick={() => setIsEditing(true)}
+                >
+                  تعديل
+                </Button>
+              )}
+            </div>
+
+            <Input
+              label="الاسم"
+              icon={<CircleUser className="w-4 h-4" />}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              disabled={!isEditing}
+            />
+            <Input
+              label="البريد الإلكتروني"
+              icon={<Mail className="w-4 h-4" />}
+              value={profile.email}
+              disabled
+            />
+            <Input
+              label="رقم الهاتف"
+              icon={<Phone className="w-4 h-4" />}
+              value={contactNumber}
+              onChange={(event) => setContactNumber(event.target.value)}
+              disabled={!isEditing}
+            />
+            <Input
+              label="رابط الصورة الشخصية"
+              value={profilePhotoUrl}
+              onChange={(event) => setProfilePhotoUrl(event.target.value)}
+              disabled={!isEditing}
+            />
+          </div>
+
+          <div className="bg-white rounded-2xl border border-accent-light/50 shadow-sm p-6 space-y-4">
+            <h3 className="text-lg font-bold text-text-dark">التحقق بالبريد (OTP)</h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Input
+                label="رمز OTP"
+                icon={<KeyRound className="w-4 h-4" />}
+                value={otp}
+                onChange={(event) => setOtp(event.target.value)}
+                placeholder="أدخل الرمز المكون من 6 أرقام"
+              />
+              <div className="flex items-end gap-2">
+                <Button
+                  variant="primary"
+                  className="h-12! w-auto! px-4"
+                  onClick={handleVerifyOtp}
+                  disabled={isVerifyingOtp}
+                >
+                  {isVerifyingOtp ? "جاري التحقق..." : "تحقق"}
+                </Button>
+                <Button
+                  variant="outline-accent"
+                  className="h-12! w-auto! px-4"
+                  onClick={handleResendOtp}
+                  disabled={isResendingOtp}
+                >
+                  {isResendingOtp ? "جاري الإرسال..." : "إعادة إرسال"}
+                </Button>
+              </div>
+            </div>
+            <p className="text-sm text-text-muted">
+              حالة التحقق الحالية: {profile.isVerified ? "موثّق" : "غير موثّق"}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-red-200 shadow-sm p-6">
+            <h3 className="text-lg font-bold text-red-600 mb-4">إجراءات الحساب</h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                variant="outline-accent"
+                className="h-10! w-auto! px-4"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                <LogOut className="w-4 h-4" />
+                {isLoggingOut ? "جاري تسجيل الخروج..." : "تسجيل الخروج"}
+              </Button>
+              <Button
+                variant="secondary"
+                className="h-10! w-auto! px-4 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+              >
+                <Trash2 className="w-4 h-4" />
+                {isDeleting ? "جاري الحذف..." : "حذف الحساب"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

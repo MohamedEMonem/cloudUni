@@ -2,9 +2,11 @@ import { DashboardCard } from "@/components/ui/DashboardCard";
 import { TrendingUp, ShoppingBag, Package, ChevronLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useNavigate } from "react-router-dom";
+import { useOwnerStore } from "@/context/OwnerStoreContext";
 
 export function Overview() {
   const navigate = useNavigate();
+  const { hasStore } = useOwnerStore();
 
   return (
     <div className="space-y-6 w-full">
@@ -64,6 +66,8 @@ export function Overview() {
               variant="primary"
               className="w-auto! px-4 py-2 text-sm"
               icon={<Plus className="w-4 h-4 ml-2" />}
+              onClick={() => navigate("/dashboard/products/create")}
+              disabled={!hasStore}
             >
               إضافة أول منتج
             </Button>

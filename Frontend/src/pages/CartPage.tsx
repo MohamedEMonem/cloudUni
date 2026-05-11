@@ -10,7 +10,10 @@ import { showNotification } from "@/utils/showNotification";
 
 export default function CartPage() {
   const token = localStorage.getItem("token");
-  const storeSlug = localStorage.getItem("ownerStoreSlug") ?? "";
+  const storeSlug =
+    localStorage.getItem("activeStoreSlug") ??
+    localStorage.getItem("ownerStoreSlug") ??
+    "";
 
   const { data, isLoading, isError } = useGetCartQuery(
     { storeSlug },

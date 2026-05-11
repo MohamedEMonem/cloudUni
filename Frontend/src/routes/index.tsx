@@ -18,6 +18,7 @@ import { Overview } from "@/features/dashboard/Overview";
 import { Products } from "@/features/dashboard/Products";
 import { CreateProduct } from "@/features/dashboard/CreateProduct";
 import { UpdateProduct } from "@/features/dashboard/UpdateProduct";
+import { Categories } from "@/features/dashboard/Categories";
 
 export default function AppRoutes() {
   return (
@@ -43,6 +44,7 @@ export default function AppRoutes() {
           <Route path="products" element={<Products />} />
           <Route path="products/create" element={<CreateProduct />} />
           <Route path="products/:id/edit" element={<UpdateProduct />} />
+          <Route path="categories" element={<Categories />} />
           <Route path="profile" element={<Profile />} />
         </Route>
       </Route>

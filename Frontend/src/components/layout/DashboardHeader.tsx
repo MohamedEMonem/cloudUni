@@ -4,6 +4,7 @@ import {
   Bell,
   LayoutDashboard,
   Package,
+  FolderTree,
   ShoppingBag,
   User,
   LogOut,
@@ -16,18 +17,28 @@ import {
 import { Button } from "@/components/ui/Button";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { StatCard } from "@/components/ui/StatCard";
+import type { IStore } from "@/types/entities/store.types";
 
 interface DashboardHeaderProps {
   storeName: string;
+  stores?: IStore[];
+  selectedStoreSlug?: string | null;
+  onStoreChange?: (slug: string) => void;
 }
 
 const navLinks = [
   { name: "نظرة عامة", path: "/dashboard", icon: LayoutDashboard },
   { name: "المنتجات", path: "/dashboard/products", icon: Package },
+  { name: "الأقسام", path: "/dashboard/categories", icon: FolderTree },
   { name: "الملف الشخصي", path: "/dashboard/profile", icon: User },
 ];
 
-export function DashboardHeader({ storeName }: DashboardHeaderProps) {
+export function DashboardHeader({
+  storeName,
+  stores = [],
+  selectedStoreSlug,
+  onStoreChange,
+}: DashboardHeaderProps) {
   const userRaw = localStorage.getItem("user");
   const user = userRaw ? JSON.parse(userRaw) : null;
 
@@ -68,6 +79,21 @@ export function DashboardHeader({ storeName }: DashboardHeaderProps) {
                 <p className="text-white/80 text-sm md:text-lg truncate max-w-48 md:max-w-none">
                   لوحة تحكم البائع - {storeName}
                 </p>
+                {stores.length > 1 && (
+                  <div className="mt-2 max-w-xs">
+                    <select
+                      value={selectedStoreSlug ?? ""}
+                      onChange={(event) => onStoreChange?.(event.target.value)}
+                      className="h-9 w-full rounded-lg border border-white/30 bg-white/10 px-3 text-sm text-white outline-none backdrop-blur-sm focus:border-white/60"
+                    >
+                      {stores.map((store) => (
+                        <option key={store.id} value={store.subdomain} className="text-black">
+                          {store.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
 

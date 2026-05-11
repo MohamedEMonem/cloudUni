@@ -22,8 +22,15 @@ export const ViewProducts = () => {
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get("cat");
   const queryStoreSlug = searchParams.get("store");
-  const fallbackStoreSlug = localStorage.getItem("ownerStoreSlug");
+  const fallbackStoreSlug =
+    localStorage.getItem("activeStoreSlug") || localStorage.getItem("ownerStoreSlug");
   const activeStoreSlug = queryStoreSlug || fallbackStoreSlug || "";
+
+  useEffect(() => {
+    if (queryStoreSlug) {
+      localStorage.setItem("activeStoreSlug", queryStoreSlug);
+    }
+  }, [queryStoreSlug]);
 
   const { data, isLoading, error } = useGetProductsQuery(
     { storeSlug: activeStoreSlug },

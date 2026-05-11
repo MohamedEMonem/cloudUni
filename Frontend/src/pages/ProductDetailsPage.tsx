@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Loader2, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -12,7 +12,8 @@ export default function ProductDetailsPage() {
   const [searchParams] = useSearchParams();
 
   const storeSlugFromQuery = searchParams.get("store");
-  const fallbackStoreSlug = localStorage.getItem("ownerStoreSlug");
+  const fallbackStoreSlug =
+    localStorage.getItem("activeStoreSlug") || localStorage.getItem("ownerStoreSlug");
   const storeSlug = useMemo(
     () => storeSlugFromQuery || fallbackStoreSlug || "",
     [fallbackStoreSlug, storeSlugFromQuery],
@@ -24,6 +25,12 @@ export default function ProductDetailsPage() {
   );
 
   const [addCartItem, { isLoading: isAdding }] = useAddCartItemMutation();
+
+  useEffect(() => {
+    if (storeSlugFromQuery) {
+      localStorage.setItem("activeStoreSlug", storeSlugFromQuery);
+    }
+  }, [storeSlugFromQuery]);
 
   const product = data?.data;
 
