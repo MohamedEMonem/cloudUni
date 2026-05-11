@@ -55,6 +55,13 @@ export function StoreSetup() {
         },
       }).unwrap();
 
+      const createdStore = response?.data?.newStore?.store;
+      const createdStoreSlug = createdStore?.subdomain || normalizedSubdomain;
+
+      if (!createdStore || !createdStoreSlug) {
+        throw new Error("تعذر قراءة بيانات المتجر بعد الإنشاء.");
+      }
+
       const createdRole = response?.data?.newStore?.storeowner?.role;
       if (createdRole) {
         localStorage.setItem("role", createdRole);
@@ -73,8 +80,9 @@ export function StoreSetup() {
         }
       }
 
+      setSelectedStoreSlug(createdStoreSlug);
       await refetchStores();
-      setSelectedStoreSlug(normalizedSubdomain);
+      setSelectedStoreSlug(createdStoreSlug);
       setIsSuccessLocked(true);
 
       showNotification({

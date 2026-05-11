@@ -13,7 +13,7 @@ interface IOwnerStoreContext {
   isOwnerRole: boolean;
   isStoreLoading: boolean;
   isStoreError: boolean;
-  refetchStores: () => void;
+  refetchStores: () => Promise<unknown>;
 }
 
 const OwnerStoreContext = createContext<IOwnerStoreContext | null>(null);
@@ -69,9 +69,6 @@ export function OwnerStoreProvider({ children }: { children: ReactNode }) {
   }, [hasStore, selectedStoreSlug, stores]);
 
   const setSelectedStoreSlug = (slug: string) => {
-    const selectedStoreExists = stores.some((store) => store.subdomain === slug);
-    if (!selectedStoreExists) return;
-
     setSelectedStoreSlugState(slug);
     localStorage.setItem(OWNER_STORE_KEY, slug);
   };
@@ -85,9 +82,7 @@ export function OwnerStoreProvider({ children }: { children: ReactNode }) {
     isOwnerRole: isOwnerRole || hasStore,
     isStoreLoading: shouldFetchStores && (isLoading || isFetching),
     isStoreError: isError,
-    refetchStores: () => {
-      void refetch();
-    },
+    refetchStores: async () => await refetch(),
   };
 
   return <OwnerStoreContext.Provider value={contextValue}>{children}</OwnerStoreContext.Provider>;
