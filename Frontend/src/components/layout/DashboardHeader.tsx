@@ -2,12 +2,9 @@ import { NavLink } from "react-router-dom";
 import {
   Store,
   Bell,
-  Sparkles,
   LayoutDashboard,
   Package,
   ShoppingBag,
-  BarChart3,
-  Settings,
   User,
   LogOut,
   DollarSign,
@@ -27,9 +24,7 @@ interface DashboardHeaderProps {
 const navLinks = [
   { name: "نظرة عامة", path: "/dashboard", icon: LayoutDashboard },
   { name: "المنتجات", path: "/dashboard/products", icon: Package },
-  { name: "الطلبات", path: "/dashboard/orders", icon: ShoppingBag },
-  { name: "التحليلات", path: "/dashboard/analytics", icon: BarChart3 },
-  { name: "إعدادات المتجر", path: "/dashboard/settings", icon: Settings },
+  { name: "الملف الشخصي", path: "/dashboard/profile", icon: User },
 ];
 
 export function DashboardHeader({ storeName }: DashboardHeaderProps) {
@@ -90,16 +85,6 @@ export function DashboardHeader({ storeName }: DashboardHeaderProps) {
                   </span>
                 </Button>
               </div>
-
-              {/* Create Store CTA */}
-              <Button
-                variant="accent"
-                icon={<Sparkles className="w-5 h-5" />}
-                iconPos="right"
-                className="px-4 md:px-6 py-2.5 md:py-3 rounded-xl shadow-lg hover:shadow-xl"
-              >
-                إنشاء متجري
-              </Button>
 
               {/* User Dropdown */}
               <div className="relative group/user">

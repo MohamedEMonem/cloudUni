@@ -72,6 +72,7 @@ export const RegisterForm = (): React.JSX.Element => {
 
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("role", response.data.user.role);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
 
       showNotification({ message: "تم تسجيل الحساب بنجاح", variant: "success" });
       response.data.user.role === EUserRole.Customer ? navigate("/") : navigate("/dashboard");

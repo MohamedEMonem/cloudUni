@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import HomeLayout from "@/layout/HomeLayout";
 import AuthLayout from "@/layout/AuthLayout";
 import DashboardLayout from "@/layout/DashboardLayout";
@@ -9,6 +9,8 @@ import ErrorPage from "@/pages/ErrorPage";
 import { LoginForm } from "@/features/auth/Login";
 import { RegisterForm } from "@/features/auth/Register";
 import Profile from "@/pages/Profile";
+import CartPage from "@/pages/CartPage";
+import ProductDetailsPage from "@/pages/ProductDetailsPage";
 
 import { ViewProducts } from "@/features/products/ViewProducts";
 
@@ -22,7 +24,10 @@ export default function AppRoutes() {
     <Routes>
       {/* Public */}
       <Route path="/" element={<HomeLayout />}>
+        <Route index element={<Navigate to="/products" replace />} />
         <Route path="/products" element={<ViewProducts />} />
+        <Route path="/products/:id" element={<ProductDetailsPage />} />
+        <Route path="/cart" element={<CartPage />} />
       </Route>
 
       <Route path="/auth" element={<AuthLayout />}>

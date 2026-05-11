@@ -19,11 +19,18 @@ const sortConfigs: Record<
 };
 
 export const ViewProducts = () => {
-  const { data, isLoading, error } = useGetProductsQuery();
-  const products = data?.data ?? [];
-
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get("cat");
+  const queryStoreSlug = searchParams.get("store");
+  const fallbackStoreSlug = localStorage.getItem("ownerStoreSlug");
+  const activeStoreSlug = queryStoreSlug || fallbackStoreSlug || "";
+
+  const { data, isLoading, error } = useGetProductsQuery(
+    { storeSlug: activeStoreSlug },
+    { skip: !activeStoreSlug },
+  );
+
+  const products = data?.data ?? [];
 
   const [filters, setFilters] = useState({
     search: "",
@@ -143,7 +150,11 @@ export const ViewProducts = () => {
             </div>
 
             {/* Products Grid */}
-            {isLoading ? (
+              {!activeStoreSlug ? (
+                <div className="bg-white rounded-lg p-12 text-center shadow-sm">
+                  <p className="text-gray-600">اختر متجر أولاً لعرض منتجاته عبر الرابط ?store=store-slug</p>
+                </div>
+              ) : isLoading ? (
               <div className="bg-white rounded-lg p-12 text-center shadow-sm">
                 <p className="text-gray-600">جاري تحميل المنتجات...</p>
               </div>
@@ -169,7 +180,7 @@ export const ViewProducts = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {displayedProducts &&
                   displayedProducts.map(
-                    (p) => p && <ProductCard key={p.id} product={p} />,
+                    (p) => p && <ProductCard key={p.id} product={p} storeSlug={activeStoreSlug} />,
                   )}
               </div>
             )}

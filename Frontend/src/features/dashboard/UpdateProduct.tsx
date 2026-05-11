@@ -6,29 +6,36 @@ import {
 } from "@/api/product.api";
 import { ProductForm } from "./components/ProductForm";
 import { Loader2 } from "lucide-react";
+import { useOwnerStore } from "@/context/OwnerStoreContext";
 
 export function UpdateProduct() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { currentStore } = useOwnerStore();
+
+  const storeSlug = currentStore?.subdomain;
 
   const {
     data: response,
     isLoading: isFetching,
     isError,
-  } = useGetProductByIdQuery({ id: id! }, { skip: !id });
+  } = useGetProductByIdQuery(
+    { id: id ?? "", storeSlug: storeSlug ?? "" },
+    { skip: !id || !storeSlug },
+  );
+
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
 
   const productData = response?.data;
 
   const handleSubmit = async (formData: FormData) => {
-    {/** remove file from formData, Because Backend team is lazy */}
     const data = Object.fromEntries(
-      Array.from(formData.entries()).filter(([, value]) => !(value instanceof File))
+      Array.from(formData.entries()).filter(([, value]) => !(value instanceof File)),
     );
 
     try {
-      if (!id) return;
-      await updateProduct({ id, data: data as any }).unwrap();
+      if (!id || !storeSlug) return;
+      await updateProduct({ id, data: data as any, storeSlug }).unwrap();
 
       const productTitle = formData.get("title") as string;
       showNotification({

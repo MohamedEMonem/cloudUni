@@ -50,8 +50,8 @@ const footerSections = [
     links: [
       { label: "الرئيسية", href: "/", route: true },
       { label: "جميع المنتجات", href: "/products", route: true },
-      { label: "تصفح المتاجر", href: "/marketplace", route: true },
-      { label: "اتصل بنا", href: "/contact", route: true },
+      { label: "لوحة تحكم البائع", href: "/dashboard", route: true },
+      { label: "تسجيل الدخول", href: "/auth/login", route: true },
     ],
   },
   {
@@ -59,21 +59,21 @@ const footerSections = [
     links: [
       {
         label: "كن تاجراً معنا",
-        href: "/register?role=store-owner",
+        href: "/auth/register",
         route: true,
       },
       { label: "لوحة تحكم البائع", href: "/dashboard", route: true },
-      { label: "دليل البائعين", href: "#" },
-      { label: "مركز المساعدة", href: "#" },
+      { label: "المنتجات", href: "/products", route: true },
+      { label: "إنشاء حساب", href: "/auth/register", route: true },
     ],
   },
   {
     header: "القوانين",
     links: [
-      { label: "شروط الخدمة", href: "#" },
-      { label: "سياسة الخصوصية", href: "#" },
-      { label: "سياسة ملفات الارتباط", href: "#" },
-      { label: "سياسة الإرجاع", href: "#" },
+      { label: "شروط الخدمة", href: "#", route: false },
+      { label: "سياسة الخصوصية", href: "#", route: false },
+      { label: "سياسة ملفات الارتباط", href: "#", route: false },
+      { label: "سياسة الإرجاع", href: "#", route: false },
     ],
   },
 ];

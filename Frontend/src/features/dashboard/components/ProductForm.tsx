@@ -1,5 +1,5 @@
 import { Controller, useForm } from "react-hook-form";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -15,12 +15,11 @@ import {
   type ProductFormData,
 } from "@/features/dashboard/schemas/product.schema";
 import { useGetCategoriesQuery } from "@/api/category.api";
-import { useMemo } from "react";
+import { useOwnerStore } from "@/context/OwnerStoreContext";
 
 interface ProductFormProps {
   initialData?: Partial<IProduct>;
   onSubmit: (formData: FormData) => void;
-  storeId?: string;
   isLoading?: boolean;
 }
 
@@ -40,11 +39,17 @@ export const ProductForm = ({
   isLoading,
 }: ProductFormProps) => {
   const navigate = useNavigate();
+  const { currentStore } = useOwnerStore();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<(File | null)[]>(new Array(6).fill(null));
 
-  const { data: categoriesResponse, isLoading: isLoadingCategories } = useGetCategoriesQuery();
+  const storeSlug = currentStore?.subdomain;
+  const { data: categoriesResponse, isLoading: isLoadingCategories } = useGetCategoriesQuery(
+    { storeSlug: storeSlug ?? "" },
+    { skip: !storeSlug },
+  );
   const [previews, setPreviews] = useState<string[]>(new Array(6).fill(""));
 
   // Cleanup object URLs to avoid memory leaks

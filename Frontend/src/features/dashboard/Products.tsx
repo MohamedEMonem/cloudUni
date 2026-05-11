@@ -10,9 +10,12 @@ import { useGetProductsByStoreIdQuery, useDeleteProductMutation } from "@/api/pr
 import { sortBy } from "@/utils/sorting";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { IProduct } from "@/types/entities/product.types";
+import { useOwnerStore } from "@/context/OwnerStoreContext";
 
 export function Products() {
   const navigate = useNavigate();
+  const { currentStore } = useOwnerStore();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [sortConfig, setSortConfig] = useState<{
     key: string;
@@ -20,8 +23,17 @@ export function Products() {
     type?: "number" | "date";
   } | null>(null);
 
-  const testStoreId = "9aef3ee0-b640-4cfe-8e19-581326ceddac"; // To be changed later
-  const { data: response, isLoading } = useGetProductsByStoreIdQuery(testStoreId);
+  const storeSlug = currentStore?.subdomain;
+  const storeId = currentStore?.id;
+
+  const { data: response, isLoading } = useGetProductsByStoreIdQuery(
+    {
+      storeSlug: storeSlug ?? "",
+      storeId: storeId ?? "",
+    },
+    { skip: !storeSlug || !storeId },
+  );
+
   const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
   const products = response?.data || [];
 
@@ -35,9 +47,10 @@ export function Products() {
 
   const confirmDelete = async () => {
     if (!productToDelete) return;
+    if (!storeSlug) return;
 
     try {
-      await deleteProduct({ id: productToDelete.id }).unwrap();
+      await deleteProduct({ id: productToDelete.id, storeSlug }).unwrap();
       showNotification({ 
         message: `${productToDelete.title}\nتم حذف المنتج بنجاح`, 
         variant: "success" 
@@ -90,6 +103,12 @@ export function Products() {
 
   return (
     <div className="space-y-6 w-full animate-in fade-in duration-500">
+      {!storeSlug && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-700 text-sm">
+          يرجى اختيار متجر صالح أولاً حتى تتمكن من إدارة المنتجات.
+        </div>
+      )}
+
       <DashboardCard
         title={`جميع المنتجات (${isLoading ? "..." : displayedProducts.length})`}
         icon={<Package className="w-6 h-6 text-primary" />}
@@ -100,6 +119,7 @@ export function Products() {
               className="w-auto! h-9! px-4 text-sm"
               icon={<Plus className="w-4 h-4" />}
               onClick={() => navigate("/dashboard/products/create")}
+              disabled={!storeSlug}
             >
               إضافة منتج
             </Button>

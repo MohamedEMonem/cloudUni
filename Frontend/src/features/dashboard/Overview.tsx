@@ -29,9 +29,9 @@ export function Overview() {
             <Button
               variant="tertiary"
               className="text-primary hover:text-primary-dark px-3 h-8! text-sm gap-1"
-              onClick={() => navigate("/dashboard/orders")}
+              onClick={() => navigate("/dashboard/products")}
             >
-              عرض الكل <ChevronLeft className="w-4 h-4" />
+              إدارة المنتجات <ChevronLeft className="w-4 h-4" />
             </Button>
           }
           className="h-full"

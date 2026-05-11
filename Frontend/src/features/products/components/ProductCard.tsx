@@ -5,15 +5,18 @@ import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import { showNotification } from "@/utils/showNotification";
 import { Heart, ShoppingCart, Star } from "lucide-react";
+import { useAddCartItemMutation } from "@/api/cart.api";
 
 type ProductProps = {
   product: IProduct;
+  storeSlug: string;
 };
 
-export const ProductCard = ({ product }: ProductProps) => {
+export const ProductCard = ({ product, storeSlug }: ProductProps) => {
   //   const dispatch = useAppDispatch();
 
   const productId = product?.id ?? "";
+  const [addCartItem, { isLoading: isAdding }] = useAddCartItemMutation();
 
   const [isFav, setIsFav] = useState(false); //Temporary state for favorite status, replace with actual logic later
 
@@ -27,13 +30,35 @@ export const ProductCard = ({ product }: ProductProps) => {
     });
   };
 
-  const AddToCartHandler = (product: IProduct) => {
-    console.log(product);
+  const AddToCartHandler = async (item: IProduct) => {
+    if (!storeSlug) {
+      showNotification({
+        message: "اختر متجراً أولاً قبل الإضافة إلى السلة.",
+        variant: "error",
+      });
+      return;
+    }
+
+    try {
+      await addCartItem({
+        storeSlug,
+        productId: item.id,
+        quantity: 1,
+      }).unwrap();
+
+      showNotification({
+        message: `${item.title}\nتمت إضافة المنتج إلى السلة`,
+        variant: "success",
+      });
+    } catch (error: any) {
+      const errorMessage = error?.data?.message || "تعذر إضافة المنتج إلى السلة.";
+      showNotification({ message: errorMessage, variant: "error" });
+    }
   };
 
   if (!product || !productId) return null;
   return (
-    <Link className="h-full" to={`/products/${productId}`} data-discover="true">
+    <Link className="h-full" to={`/products/${productId}?store=${storeSlug}`} data-discover="true">
       <Card>
         <div data-slot="card-content" className="pb-6 p-0 flex flex-col h-full">
           <div className="relative h-32 w-full overflow-hidden bg-bg-cream group">
@@ -93,6 +118,7 @@ export const ProductCard = ({ product }: ProductProps) => {
                   AddToCartHandler(product);
                 }}
                 className="w-18! h-8!"
+                disabled={isAdding}
               >
                 <span className="text-xs"> أضف</span>
               </Button>

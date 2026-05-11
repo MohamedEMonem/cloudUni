@@ -3,14 +3,28 @@ import { IAPIResponse } from "@/types/api/response.types";
 import { ICategory } from "@/types/entities/category.types";
 import { CreateCategoryDTO, UpdateCategoryDTO } from "@/types/dto/category.dto";
 
+interface IStoreScopedRequest {
+  storeSlug: string;
+}
+
+interface IStoreCategoryByIdRequest extends IStoreScopedRequest {
+  id: string;
+}
+
+interface IStoreCreateCategoryRequest extends IStoreScopedRequest {
+  data: CreateCategoryDTO;
+}
+
+interface IStoreUpdateCategoryRequest extends IStoreScopedRequest, UpdateCategoryDTO {}
+
 export const categoryApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getCategories: builder.query<
       IAPIResponse<ICategory[]>,
-      void
+      IStoreScopedRequest
     >({
-      query: () => ({
-        url: "categories",
+      query: ({ storeSlug }) => ({
+        url: `stores/${storeSlug}/categories`,
         method: "GET",
       }),
       providesTags: ["Category"],
@@ -18,22 +32,22 @@ export const categoryApi = apiSlice.injectEndpoints({
 
     createCategory: builder.mutation<
       IAPIResponse<ICategory>,
-      CreateCategoryDTO
-    >({  
-      query: (categoryData) => ({
-        url: "categories",
+      IStoreCreateCategoryRequest
+    >({
+      query: ({ storeSlug, data }) => ({
+        url: `stores/${storeSlug}/categories`,
         method: "POST",
-        body: categoryData,
+        body: data,
       }),
       invalidatesTags: ["Category"],
     }),
 
     updateCategory: builder.mutation<
       IAPIResponse<ICategory>,
-      UpdateCategoryDTO
+      IStoreUpdateCategoryRequest
     >({
-      query: ({ id, data }) => ({
-        url: `categories/${id}`,
+      query: ({ id, data, storeSlug }) => ({
+        url: `stores/${storeSlug}/categories/${id}`,
         method: "PATCH",
         body: data,
       }),
@@ -42,10 +56,10 @@ export const categoryApi = apiSlice.injectEndpoints({
 
     deleteCategory: builder.mutation<
       IAPIResponse<null>,
-      { id: string }
+      IStoreCategoryByIdRequest
     >({
-      query: ({ id }) => ({
-        url: `categories/${id}`,
+      query: ({ id, storeSlug }) => ({
+        url: `stores/${storeSlug}/categories/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Category"],

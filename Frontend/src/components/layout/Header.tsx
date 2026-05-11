@@ -47,24 +47,14 @@ const navItems: NavItemData[] = [
       { label: "الكتب", href: "/products?cat=books" },
     ],
   },
-  {
-    label: "المحلات",
-    href: "/marketplace",
-    icon: <Store className="w-5 h-5 text-primary" />,
-    subItems: [
-      { label: "أفضل المتاجر", href: "/marketplace?sort=top" },
-      { label: "المتاجر الجديدة", href: "/marketplace?sort=new" },
-      { label: "متاجر موثوقة", href: "/marketplace?filter=verified" },
-    ],
-  },
 ];
 
 const iconActions = [
   {
     icon: <Heart className="w-5 h-5 text-text-dark" />,
-    href: "/favorites",
+    href: "/products",
     ariaLabel: "المفضلة",
-    label: "المفضلة",
+    label: "المنتجات",
   },
   {
     icon: <ShoppingCart className="w-5 h-5 text-text-dark" />,
@@ -76,14 +66,14 @@ const iconActions = [
 
 const userActions = [
   {
-    label: "طلباتي",
-    href: "/orders",
-    icon: ShoppingBag,
+    label: "الملف الشخصي",
+    href: "/dashboard/profile",
+    icon: User,
   },
   {
-    label: "الملف الشخصي",
-    href: "/profile",
-    icon: User,
+    label: "لوحة التحكم",
+    href: "/dashboard",
+    icon: ShoppingBag,
   },
 ];
 
