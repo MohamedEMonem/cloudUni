@@ -24,7 +24,7 @@ export function OwnerStoreProvider({ children }: { children: ReactNode }) {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
   const isOwnerRole = role === EUserRole.StoreOwner || role === EUserRole.Admin;
-  const shouldFetchStores = Boolean(token) && isOwnerRole;
+  const shouldFetchStores = Boolean(token);
 
   const {
     data: storesResponse,
@@ -82,7 +82,7 @@ export function OwnerStoreProvider({ children }: { children: ReactNode }) {
     selectedStoreSlug,
     setSelectedStoreSlug,
     hasStore,
-    isOwnerRole,
+    isOwnerRole: isOwnerRole || hasStore,
     isStoreLoading: shouldFetchStores && (isLoading || isFetching),
     isStoreError: isError,
     refetchStores: () => {

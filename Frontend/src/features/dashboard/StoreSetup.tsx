@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { TextArea } from "@/components/ui/TextArea";
 import { showNotification } from "@/utils/showNotification";
 import { useOwnerStore } from "@/context/OwnerStoreContext";
+import { EUserRole } from "@/types/entities/user.types";
 
 const normalizeSubdomain = (value: string) =>
   value
@@ -46,13 +47,31 @@ export function StoreSetup() {
     }
 
     try {
-      await createStore({
+      const response = await createStore({
         data: {
           name: normalizedName,
           subdomain: normalizedSubdomain,
           description: description.trim() || undefined,
         },
       }).unwrap();
+
+      const createdRole = response?.data?.newStore?.storeowner?.role;
+      if (createdRole) {
+        localStorage.setItem("role", createdRole);
+      } else {
+        localStorage.setItem("role", EUserRole.StoreOwner);
+      }
+
+      const rawUser = localStorage.getItem("user");
+      if (rawUser) {
+        try {
+          const parsedUser = JSON.parse(rawUser);
+          parsedUser.role = EUserRole.StoreOwner;
+          localStorage.setItem("user", JSON.stringify(parsedUser));
+        } catch {
+          // ignore malformed local user cache
+        }
+      }
 
       await refetchStores();
       setSelectedStoreSlug(normalizedSubdomain);
