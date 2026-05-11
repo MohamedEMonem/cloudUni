@@ -2,12 +2,12 @@ import {
     putObjectAsync,
     deleteObjectAsync
 } from "../utils/s3Client.js";
-import s3Client from "../config/s3.config.js";
 
 import crypto from "crypto";
 import sharp from "sharp";
 
-const publicBucketName = "dokkan-public-assets"
+const publicBucketName = process.env.AWS_S3_BUCKET_NAME || "prod-dokkan";
+const awsRegion = process.env.AWS_S3_REGION || "us-east-1";
 
 
 /**
@@ -65,8 +65,33 @@ const determinePathName=({clientRole,subFolder,clientEmail,fileName})=>{
 
 }
 
+const encodeObjectPath = (objectName) => objectName.split("/").map(encodeURIComponent).join("/");
+
+const extractObjectNameFromUrl = (imgUrl) => {
+    try {
+        const parsed = new URL(imgUrl);
+        const pathname = decodeURIComponent(parsed.pathname.replace(/^\/+/, ""));
+
+        // Virtual-hosted style: https://<bucket>.s3.<region>.amazonaws.com/<key>
+        if (parsed.hostname.startsWith(`${publicBucketName}.`)) {
+            return pathname;
+        }
+
+        // Path style: https://s3.<region>.amazonaws.com/<bucket>/<key>
+        if (pathname.startsWith(`${publicBucketName}/`)) {
+            return pathname.slice(publicBucketName.length + 1);
+        }
+
+        return pathname;
+    } catch {
+        const marker = `${publicBucketName}/`;
+        const idx = imgUrl.indexOf(marker);
+        return idx === -1 ? "" : imgUrl.substring(idx + marker.length);
+    }
+};
+
 /**
- * Upload an optimized image to the public MinIO bucket.
+ * Upload an optimized image to the configured public AWS S3 bucket.
  * @param {Express.Multer.File} file Uploaded file from multer.
  * @param {string} clientEmail Email of the uploading user.
  * @param {string} clientRole Role of the uploading user.
@@ -83,9 +108,9 @@ const uploadPublicImg = async (file, clientEmail, clientRole, subFolder) => {
 
         const buffer = await optimizedImageBuffer(file.buffer);
 
-        await putObjectAsync({ bucket: publicBucketName, objectName, buffer, size: buffer.length, meta: { "Content-Type": "image/webp" } });
+        await putObjectAsync({ bucket: publicBucketName, objectName, buffer, size: buffer.length, meta: { ContentType: "image/webp" } });
 
-        const imgUrl = `https://${publicBucketName}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${objectName}`;
+        const imgUrl = `https://${publicBucketName}.s3.${awsRegion}.amazonaws.com/${encodeObjectPath(objectName)}`;
         return imgUrl;
     }
     catch (err) {
@@ -95,20 +120,19 @@ const uploadPublicImg = async (file, clientEmail, clientRole, subFolder) => {
 }
 
 /**
- * Delete an object from the public MinIO bucket using its full URL.
+ * Delete an object from the configured public AWS S3 bucket using its full URL.
  * @param {string} imgUrl Public URL of the stored image.
  * @returns {Promise<void>}
  */
 const deletePublicImg = async (imgUrl) => {
-    // take the object path after the bucket name
     if (!imgUrl) return;
-    const marker = `${publicBucketName}/`;
-    const idx = imgUrl.indexOf(marker);
-    if (idx === -1) {
-        console.warn("deletePublicImg: URL does not contain bucket name", imgUrl);
+    const objectName = extractObjectNameFromUrl(imgUrl);
+
+    if (!objectName) {
+        console.warn("deletePublicImg: Could not extract object name from URL", imgUrl);
         return;
     }
-    const objectName = imgUrl.substring(idx + marker.length);
+
     await deleteObjectAsync(publicBucketName, objectName);
 }
 
