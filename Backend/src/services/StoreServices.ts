@@ -36,7 +36,7 @@ export class StoreServices {
          prisma.store.create({
             data: {
                 ...dto,
-                status: 'Pending',
+                status: 'Active',
                 owner: {
                     connect: { id: ownerId }
                 }
